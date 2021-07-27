@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627356190650">
+<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627357006195">
 <link rel="stylesheet" href="https://waltcow.github.io/styles/main.css">
 
 
@@ -27,9 +27,11 @@
 </script>
 
 
-    <meta name="description" content="Kotlin Coroutine
-Kotlin 语言中 async 和 await 并不是保留的关键词， 它在标准库只提供了有限的low-level 的API，让其生态的库自己去管理Coroutine编程控制相关的细节。 另一方面，相对于其..." />
-    <meta name="keywords" content="" />
+    <meta name="description" content="kotlinx.coroutines 作为一个由Jetbrains开发的 Coroutine 管理库，它包含了很多高级的操作coroutines的API, 本文介绍一些基础用法。
+
+Kotlin Coroutine
+Kotlin 语言中 a..." />
+    <meta name="keywords" content="kotlin" />
   </head>
   <body>
     <div id="app" class="main">
@@ -38,7 +40,7 @@ Kotlin 语言中 async 和 await 并不是保留的关键词， 它在标准库�
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://waltcow.github.io">
-        <img src="https://waltcow.github.io/images/avatar.png?v=1627356190650" class="site-logo">
+        <img src="https://waltcow.github.io/images/avatar.png?v=1627357006195" class="site-logo">
         <h1 class="site-title">waltcow</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -107,8 +109,13 @@ Kotlin 语言中 async 和 await 并不是保留的关键词， 它在标准库�
             <h2 class="post-title">KotlinX Conroutine</h2>
             <div class="post-date">2021-07-22</div>
             
+              <div class="feature-container" style="background-image: url('https://i.loli.net/2021/07/27/M7rXnJCgw9cdmsl.jpg')">
+              </div>
+            
             <div class="post-content" v-pre>
-              <h1 id="kotlin-coroutine">Kotlin Coroutine</h1>
+              <p>kotlinx.coroutines 作为一个由Jetbrains开发的 Coroutine 管理库，它包含了很多高级的操作coroutines的API, 本文介绍一些基础用法。</p>
+<!-- more -->
+<h1 id="kotlin-coroutine">Kotlin Coroutine</h1>
 <p>Kotlin 语言中 <em>async</em> 和 <em>await</em> 并不是保留的关键词， 它在标准库只提供了有限的low-level 的API，让其生态的库自己去管理Coroutine编程控制相关的细节。 另一方面，相对于其他语言中的Future和Promise，Kotlin提出了Suspend 的概念抽象让异步编程变得相对安全和更少出错。</p>
 <p><em>kotlinx.coroutines</em> 作为一个由Jetbrains开发的 Coroutine 管理库，它包含了很多高级的操作coroutines的API，譬如 <em>launch</em> 和 <em>async</em> 还有其他。</p>
 <p>接下来阐述coroutine的基本概念</p>
@@ -248,11 +255,18 @@ fun main() = runBlocking {
 </code></pre>
 <p>它启动了100K个coroutines，5秒钟后，每个coroutine打印一个点。</p>
 <p>现在，用线程试试（去掉<em>runBlocking</em>，用线程代替协程启动，用 <em>Thread.sleep</em>代替延迟）。会发生什么？(很可能你的代码会产生内存不足的错误)</p>
-<!-- more -->
 <h3 id="参考文献">参考文献</h3>
 <p><a href="https://kotlinlang.org/docs/coroutines-basics.html#your-first-coroutine">Coroutines basics</a></p>
 
             </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://waltcow.github.io/tag/JLYRMSPYa/" class="tag">
+                    kotlin
+                  </a>
+                
+              </div>
             
             
               <div class="next-post">
