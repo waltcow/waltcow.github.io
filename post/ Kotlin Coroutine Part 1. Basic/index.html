@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title> Kotlin Coroutine Part 1. Basic | waltcow</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627375101544">
+<link rel="stylesheet" href="https://waltcow.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZYD6WR6G0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0ZYD6WR6G0');
+</script>
+
+
+    <meta name="description" content="kotlinx.coroutines 作为一个由Jetbrains开发的 Coroutine 管理库，它包含了很多高级的操作coroutines的API, 本文介绍一些基础用法。
+
+Kotlin Coroutine
+Kotlin 语言中 a..." />
+    <meta name="keywords" content="kotlin" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://waltcow.github.io">
+        <img src="https://waltcow.github.io/images/avatar.png?v=1627375101544" class="site-logo">
+        <h1 class="site-title">waltcow</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://github.com/waltcow" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      Do have faith in what you're doing.
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://waltcow.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title"> Kotlin Coroutine Part 1. Basic</h2>
+            <div class="post-date">2021-07-22</div>
+            
+              <div class="feature-container" style="background-image: url('https://i.loli.net/2021/07/27/M7rXnJCgw9cdmsl.jpg')">
+              </div>
+            
+            <div class="post-content" v-pre>
+              <p>kotlinx.coroutines 作为一个由Jetbrains开发的 Coroutine 管理库，它包含了很多高级的操作coroutines的API, 本文介绍一些基础用法。</p>
+<!-- more -->
+<h1 id="kotlin-coroutine">Kotlin Coroutine</h1>
+<p>Kotlin 语言中 <em>async</em> 和 <em>await</em> 并不是保留的关键词， 它在标准库只提供了有限的low-level 的API，让其生态的库自己去管理Coroutine编程控制相关的细节。 另一方面，相对于其他语言中的Future和Promise，Kotlin提出了Suspend 的概念抽象让异步编程变得相对安全和更少出错。</p>
+<p><em>kotlinx.coroutines</em> 作为一个由Jetbrains开发的 Coroutine 管理库，它包含了很多高级的操作coroutines的API，譬如 <em>launch</em> 和 <em>async</em> 还有其他。</p>
+<p>接下来阐述coroutine的基本概念</p>
+<p>Coroutine 是可suspend计算的实例, 概念上它和线程非常的相似，它们都会接收一段块状代码，并与剩下的代码同时执行</p>
+<p>但值得注意的是，coroutine 是不和任何特定的线程绑定在一起的，它可能会在一条线程上执行的，而在另外一条上恢复。</p>
+<p>Coroutines 可以被想象为轻量化的线程，但它们之间有着重要的区别，以至于在真实的使用场景中和线程有着明显的不同</p>
+<p>下面代码作为首个coroutine的例子作为阐述</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+//sampleStart
+fun main() = runBlocking { // this: CoroutineScope
+    launch { // launch a new coroutine and continue
+        delay(1000L) // non-blocking delay for 1 second (default time unit is ms)
+        println(&quot;World!&quot;) // print after delay
+    }
+    println(&quot;Hello&quot;) // main coroutine continues while a previous one is delayed
+}
+//sampleEnd
+</code></pre>
+<p>打印的结果</p>
+<pre><code>Hello
+World!
+</code></pre>
+<p>下面逐行分析代码的执行过程</p>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html">launch</a>  是 coroutine构造器. 它另开了新的协程，同时执行剩下的代码，这都是同时独立的执行，所以 <strong>Hello</strong> 会第一个被打印出来</p>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/delay.html">delay</a>  是一个特殊 <em>suspending function</em>. 它会在coroutine上 <em>suspends</em> 一段时间。 coroutine在暂停的同时并不会对阻塞它所处在的线程 ，同时允许其他的coroutine 在它当前的线程中执行它们的代码。</p>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html">runBlocking</a>  另一个 coroutine的构造器，它可以让协程的代码和外界有了桥接和联系，以main() 作为入口。在一系列的coroutine外面会被runBlocking 用 { … }   包着，在IDE 下面会有高亮的提示  ::CoroutineScope hint right after the runBlocking opening curly brace:: 当你在你代码中用 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html">launch</a> 发起了调用，却忘记用 runBlocking包裹时将会出现报错，因为 launch 只能在   <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a> 中声明。</p>
+<p><strong>runBlocking</strong> 意味着处在这一线程中的（上面例子为主线程）代码在执行的过程中将会被 <strong>blocked</strong>，直到runBlocking { … } 所有的coroutines 完成所有的执行。你会经常看到runBlocking 用在程序中非常靠前的位置，并且很少会在真实的业务代码中看到。这是因为线程是非常昂贵的资源，阻塞它们是很低效且并不是我们想要的结果。</p>
+<p>结构化的并发编程</p>
+<p>Coroutines 遵循着 <strong>结构化并发的</strong> 的原则，这意味着新的coroutines 只能被特定的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a> 发起，它界定了coroutines的生命周期。</p>
+<p>上面的例子介绍了 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html">runBlocking</a> 的使用，它创建了相关的作用域，因此前一个例子中一直等到 延迟一秒后 world 的输出 才结束。</p>
+<p>在真实的应用中。我们可能启动多个协程。 结构化的同步确保了它们不会丢失和导致内存泄漏。外部的作用域会等到它内部的子协程结束才退出。</p>
+<p>结构化的同步也确保了代码中的所有错误都能正确地被收集下来并不会丢失。</p>
+<h3 id="提取函数并重构">提取函数并重构</h3>
+<p>让我们把 launch{ ... } 中的代码块提取到一个单独的函数中。当你对这段代码进行 &quot;提取函数 &quot;重构时，你将声明一个带有suspend修改器的新函数。这是你的第一个suspend函数。suspend函数可以像普通函数一样在 coroutine 中使用，但它们的有着suspend特性，它们可以反过来使用其他suspend的函数（如本例中的 delay）来挂起 coroutine 的执行。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+//sampleStart
+fun main() = runBlocking { // this: CoroutineScope
+    launch { doWorld() }
+    println(“Hello”)
+}
+
+// this is your first suspending function
+suspend fun doWorld() {
+    delay(1000L)
+    println(“World!”)
+}
+//sampleEnd
+</code></pre>
+<h3 id="作用域的构造器">作用域的构造器</h3>
+<p>除了自带中的不同构建器所提供scope之外，还可以使用 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html">coroutineScope</a> 构建器来声明自定义的scope。它创建一个coroutine scope，在所有启动的子程序完成之后才会被销毁。</p>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html">runBlocking</a> 和 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html">coroutineScope</a> 构建器看起来很相似，因为它们都在等待其主体和所有子程序完成。主要的区别在于 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html">runBlocking</a>方法会阻塞当前线程并进行等待，而<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html">coroutineScope</a>只是暂停，释放底层线程用于其他用途。因为这个区别，<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html">runBlocking</a>是一个普通的函数，而<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html">coroutineScope</a>是一个暂停的函数。</p>
+<p>你可以从任何一个suspend函数中使用coroutineScope。例如，你可以将Hello和World的并发打印转移到一个suspend的函数doWorld()中。</p>
+<pre><code class="language-kotlin">
+import kotlinx.coroutines.*
+
+//sampleStart
+fun main() = runBlocking {
+    doWorld()
+}
+
+suspend fun doWorld() = coroutineScope {  // this: CoroutineScope
+    launch {
+        delay(1000L)
+        println(“World!”)
+    }
+    println(“Hello”)
+}
+//sampleEnd
+</code></pre>
+<p>代码输出结果</p>
+<pre><code>Hello
+World!
+</code></pre>
+<h3 id="作用域构造器和并发">作用域构造器和并发</h3>
+<p>一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html">coroutineScope</a>构建器可以用在任何suspend函数中，以执行多个并发的操作。让我们在一个doWorld 的suspend函数中启动两个并发的coroutine。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+//sampleStart
+// Sequentially executes doWorld followed by “Done”
+fun main() = runBlocking {
+    doWorld()
+    println(“Done”)
+}
+
+// Concurrently executes both sections
+suspend fun doWorld() = coroutineScope { // this: CoroutineScope
+    launch {
+        delay(2000L)
+        println(“World 2”)
+    }
+    launch {
+        delay(1000L)
+        println(“World 1”)
+    }
+    println(“Hello”)
+}
+//sampleEnd
+</code></pre>
+<p>launch { ... }块内的两段代码都是同时执行的，从开始的一秒钟后，先打印<em>World 1</em>，从开始的两秒钟后，接着打印 <em>World 2</em>。doWorld 中的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html">coroutineScope</a>只有在这两段代码完成后才会完成，所以doWorld返回并在这之后打印 <em>Done</em>。</p>
+<h3 id="显式的job">显式的Job</h3>
+<p>一个 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html">launch</a> coroutine builder 会返回一个 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a> 对象，该对象是启动的 coroutine 的句柄，可以用来明确地等待其完成。例如，你可以等待子循环程序的完成，然后打印 <em>Done</em> 。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+fun main() = runBlocking {
+//sampleStart
+    val job = launch { // launch a new coroutine and keep a reference to its Job
+        delay(1000L)
+        println(“World!”)
+    }
+    println(“Hello”)
+    job.join() // wait until child coroutine completes
+    println(“Done”) 
+//sampleEnd    
+}
+</code></pre>
+<p>代码输出结果</p>
+<pre><code>Hello
+World!
+Done
+</code></pre>
+<h3 id="相当轻量化的coroutines">相当轻量化的Coroutines</h3>
+<p>执行以下代码：</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+//sampleStart
+fun main() = runBlocking {
+    repeat(100_000) { // launch a lot of coroutines
+        launch {
+            delay(5000L)
+            print(“.”)
+        }
+    }
+}
+//sampleEnd
+</code></pre>
+<p>它启动了100K个coroutines，5秒钟后，每个coroutine打印一个点。</p>
+<p>现在，用线程试试（去掉<em>runBlocking</em>，用线程代替协程启动，用 <em>Thread.sleep</em>代替延迟）。会发生什么？(很可能你的代码会产生内存不足的错误)</p>
+<h3 id="参考文献">参考文献</h3>
+<p><a href="https://kotlinlang.org/docs/coroutines-basics.html#your-first-coroutine">Coroutines basics</a></p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://waltcow.github.io/tag/JLYRMSPYa/" class="tag">
+                    kotlin
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://waltcow.github.io/post/about/">
+                  <h3 class="post-title">
+                    关于
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>
