@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627355951404">
+<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627356190650">
 <link rel="stylesheet" href="https://waltcow.github.io/styles/main.css">
 
 
@@ -38,7 +38,7 @@ Kotlin 语言中 async 和 await 并不是保留的关键词， 它在标准库�
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://waltcow.github.io">
-        <img src="https://waltcow.github.io/images/avatar.png?v=1627355951404" class="site-logo">
+        <img src="https://waltcow.github.io/images/avatar.png?v=1627356190650" class="site-logo">
         <h1 class="site-title">waltcow</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -248,6 +248,9 @@ fun main() = runBlocking {
 </code></pre>
 <p>它启动了100K个coroutines，5秒钟后，每个coroutine打印一个点。</p>
 <p>现在，用线程试试（去掉<em>runBlocking</em>，用线程代替协程启动，用 <em>Thread.sleep</em>代替延迟）。会发生什么？(很可能你的代码会产生内存不足的错误)</p>
+<!-- more -->
+<h3 id="参考文献">参考文献</h3>
+<p><a href="https://kotlinlang.org/docs/coroutines-basics.html#your-first-coroutine">Coroutines basics</a></p>
 
             </div>
             
