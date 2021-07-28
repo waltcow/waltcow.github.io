@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://waltcow.github.io</id>
     <title>waltcow</title>
-    <updated>2021-07-27T09:45:55.660Z</updated>
+    <updated>2021-07-28T04:17:13.003Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://waltcow.github.io"/>
     <link rel="self" href="https://waltcow.github.io/atom.xml"/>
@@ -284,7 +284,8 @@ Computation failed with ArithmeticException
 ]]></summary>
         <content type="html"><![CDATA[<p>本文简单介绍一下 Kotlin Coroutine的取消和超时处理</p>
 <!-- more -->
-<p>在一个长时间运行的应用程序中，你可能需要对你的后台的coroutines进行细粒度的控制。例如，用户可能已经关闭了一个coroutine正在运行着的页面，现在不再需要其结果，可以取消其操作。<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html">launch</a>函数返回一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>，可以用来取消正在运行的coroutine。</p>
+<h1 id="kotlin-coroutine-part-2-cancellation-and-timeouts">Kotlin Coroutine Part 2. Cancellation and timeouts</h1>
+<p>在一个长时间运行的应用程序中，你可能需要对运行在后台的coroutines进行细粒度的控制。例如，用户可能已经关闭了一个正在运行着的coroutine页面，现在不再需要其结果了，可以取消其操作。<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html">launch</a>函数返回一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>，可以用来取消运行中的coroutine。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 
 fun main() = runBlocking {
@@ -347,9 +348,9 @@ job: I'm sleeping 4 ...
 main: Now I can quit.
 
 </code></pre>
-<p>运行上面程序可以看到，即使job在取消后，仍然继续打印 &quot;I'm sleeping&quot;，直到 job在五次反复后自行完成。</p>
-<h2 id="让计算中代码可以取消">让计算中代码可以取消</h2>
-<p>有两种方法可以使计算代码可取消。第一种是周期性地调用一个检查取消的暂停函数。譬如使用 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/yield.html">yield</a>函数是个不错的选择。另一种是显式地检查取消的状态。让我们试试后一种方法。</p>
+<p>运行上面程序可以看到，即使在job被取消后，仍然继续打印 &quot;I'm sleeping&quot;，直到 job在反复执行5次后才完成。</p>
+<h2 id="让正在运行中代码可以取消">让正在运行中代码可以取消</h2>
+<p>有两种方法可以取消正在运行代码。第一种是周期性地调用一个检查取消的suspend函数。譬如使用 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/yield.html">yield</a>函数是个选择。另一种是显式地检查取消的状态。让我们试试后一种方法。</p>
 <p>用<code>while (isActive)</code>替换前面例子中的<code>while (i &lt; 5)</code>，然后重新运行它。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 
@@ -415,7 +416,7 @@ job: I'm running finally
 main: Now I can quit.
 </code></pre>
 <h2 id="运行不可取消的程序块">运行不可取消的程序块</h2>
-<p>在前面例子中，任何试图在 <code>finally</code>块中使用suspend函数的行为都会导致<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html">CancellationException</a>，因为运行这段代码的coroutine被取消了。通常情况下这不是问题，因为所有表现良好的关闭操作（关闭File、取消Job或关闭任何类型的channel）通常都是无阻塞的，不涉及任何挂起函数。然而，在极少数情况下，当你需要在一个已取消的程序中暂停时，你可以使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html">withContext</a>函数和<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-non-cancellable/index.html">NonCancellable</a> 的context 将相应的代码包裹在<code>withContext(NonCancellable) {...}</code>中，正如下面的例子所示。</p>
+<p>在前面例子中，当运行代码的coroutine被取消的情况下， 任何试图在 <code>finally</code>块中使用suspend函数的行为都会导致<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html">CancellationException</a>。通常情况下这并不影响，因为所有处理得当的关闭操作（关闭File读写、取消Job或关闭任何类型的channel）通常都是无阻塞的，不涉及任何suspend函数。然而，在极少数情况下，当你需要在一个已取消的程序中暂停时，你可以使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html">withContext</a>函数和<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-non-cancellable/index.html">NonCancellable</a> 的context 将相应的代码包裹在<code>withContext(NonCancellable) {...}</code>中，正如下面的例子所示。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 
 fun main() = runBlocking {
@@ -452,7 +453,7 @@ main: Now I can quit.
 
 </code></pre>
 <h2 id="超时处理">超时处理</h2>
-<p>取消执行一个coroutine的最明显且实际原因是因为它的执行时间已经超时了。虽然你可以手动跟踪相应的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>的引用，并在延迟一会儿后再启动一个单独的coroutine来取消那个job，这里推荐一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>函数可以做到这点。请看下面的例子。</p>
+<p>取消一个执行中的coroutine，最常见原因是因为它的执行时间已经超时了。虽然你可以手动拿到相应的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>的引用，并在延迟一会儿后再启动一个单独的coroutine来取消那个job，但这里推荐用一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>函数处理。请看下面的例子。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 
 fun main() = runBlocking {
@@ -472,8 +473,8 @@ I'm sleeping 1 ...
 I'm sleeping 2 ...
 Exception in thread &quot;main&quot; kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 1300 ms
 </code></pre>
-<p>由<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>抛出的<code>TimeoutCancellationException</code>是<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html">CancellationException</a>的一个子类。我们以前没有看到它的堆栈跟踪印在控制台。这是因为在一个被取消的循环程序里面<code>CancellationException</code>被认为是循环程序完成的一个正常原因。然而，在这个例子中，我们在<code>main</code>函数中使用了`withTimeout'。</p>
-<p>由于取消只是一个异常，所有的资源都以正常的方式关闭。如果你需要在任何一种超时情况下专门做一些额外的动作，你可以用<code>try {...} catch (e: TimeoutCancellationException) {...}</code>块来包装处理超时的代码，或者使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout-or-null.html">withTimeoutOrNull</a>函数，它与<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>类似，但在超时后会返回<code>null</code>而不是抛出一个异常。</p>
+<p>由<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>抛出的<code>TimeoutCancellationException</code>是<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html">CancellationException</a>的一个子类。我们以前没有在控制台看到它的堆栈信息。这是因为在一个被取消的循环程序里面，<code>CancellationException</code>被认为是循环程序结束的一个合理原因。然而，在这个例子中，我们在<code>main</code>函数中使用了`withTimeout'。</p>
+<p>由于取消只是一个异常，所有的资源都以正常的方式关闭。如果你需要在任何一种超时情况下专门做一些额外的动作，你可以用<code>try {...} catch (e: TimeoutCancellationException) {...}</code>块来包装处理超时的代码，或者使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout-or-null.html">withTimeoutOrNull</a>函数，它与<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>类似，但不同是它会在超时后会返回<code>null</code>而不是抛出一个异常。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 
 fun main() = runBlocking {
@@ -495,7 +496,7 @@ I'm sleeping 1 ...
 I'm sleeping 2 ...
 Result is null
 </code></pre>
-<h2 id="异步操作的超时和资源">异步操作的超时和资源</h2>
+<h2 id="异步操作的超时处理和资源管理">异步操作的超时处理和资源管理</h2>
 <p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>中的超时事件对于在其块中运行的代码来说是异步的，可能在任何时候发生，甚至在从超时代码块内部返回之前。如果你在区块内打开或获取一些需要在区块外关闭或释放的资源，请牢记这一点。</p>
 <p>例如，这里我们用<code>Resource</code>类来模仿一个可关闭的资源，它只通过增加<code>acquired</code>计数器和从<code>close</code>函数中减去这个计数器来跟踪它被创建的次数。让我们用很小的超时来运行大量的循环程序，尝试在延迟一段时间后从<code>withTimeout</code>块内部获取这个资源，并从外部释放它。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
