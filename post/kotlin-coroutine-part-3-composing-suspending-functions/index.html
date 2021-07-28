@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627445778894">
+<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627453065400">
 <link rel="stylesheet" href="https://waltcow.github.io/styles/main.css">
 
 
@@ -41,7 +41,7 @@ suspend ..." />
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://waltcow.github.io">
-        <img src="https://waltcow.github.io/images/avatar.png?v=1627445778894" class="site-logo">
+        <img src="https://waltcow.github.io/images/avatar.png?v=1627453065400" class="site-logo">
         <h1 class="site-title">waltcow</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -128,8 +128,8 @@ suspend fun doSomethingUsefulTwo(): Int {
     return 29
 }
 </code></pre>
-<p>如果我们需要它们被依次调用 -- 首先是<code>doSomethingUsefulOne</code>，然后是<code>doSomethingUsefulTwo</code>，并计算它们的结果之和，我们该怎么做？在实践中，如果我们用第一个函数的结果来决定是否需要调用第二个函数或决定如何调用，我们就会这样做。</p>
-<p>我们使用正常的顺序调用，因为coroutine中的代码，就像普通代码一样，默认是顺序执行的。下面的例子通过测量两个suspend函数的总执行时间作为演示。</p>
+<p>如果我们需要它们依次被调用 -- 首先是<code>doSomethingUsefulOne</code>，然后是<code>doSomethingUsefulTwo</code>，并计算它们的结果之和，我们该怎么做？在真实场景中，如果我们用第一个函数的返回结果来决定第二个函数是否需要调用或如何调用，我们就会这样做。</p>
+<p>我们按正常的顺序调用，因为coroutine中的代码，就像普通代码一样，默认是顺序执行的。下面的例子通过测量两个suspend函数的总执行时间作为演示。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 import kotlin.system.*
 
@@ -160,7 +160,7 @@ Completed in 2017 ms
 </code></pre>
 <h2 id="使用async进行并发">使用async进行并发</h2>
 <p>如果<code>doSomethingUsefulOne</code>和<code>doSomethingUsefulTwo</code>的调用之间没有依赖关系，而我们想同时进行这两个操作来更快地得到答案，怎么办？这就是<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html">async</a>发挥作用的地方。</p>
-<p>从概念上讲，<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html">async</a>就像<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html">launch</a>一样。它启动了一个单独的coroutine，这是一个轻量级的线程，与所有其他的coroutine同时工作。不同的是，<code>launch</code>返回一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>，并且不携带任何结果值，而<code>async</code>返回一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/index.html">Deferred</a>--一个轻量级的非阻塞未来，代表一个承诺，以后提供一个结果。你可以在一个延迟值上使用<code>.await()</code>来获得它的最终结果，但是<code>Deferred</code>也是一个<code>Job</code>，所以你可以在需要时取消它。</p>
+<p>从概念上讲，<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html">async</a>就像<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html">launch</a>一样。它启动了一个单独的coroutine，这是一个轻量级的线程，与所有其他的coroutine同时工作。不同的是，<code>launch</code>返回一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>，并且不携带任何结果值，而<code>async</code>返回一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/index.html">Deferred</a>--一个轻量级的非阻塞Future，代表一个Promise，以后提供一个结果。你可以在一个Deferred上使用<code>.await()</code>来获得它的最终结果，但是<code>Deferred</code>也是一个<code>Job</code>，所以你可以在需要时取消它。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 import kotlin.system.*
 
@@ -189,11 +189,10 @@ suspend fun doSomethingUsefulTwo(): Int {
 <p>运行的输出如下：</p>
 <pre><code class="language-text">The answer is 42
 Completed in 1017 ms
-
 </code></pre>
 <p>这是两倍的速度，因为这两个coroutines是同时执行的。请注意，coroutines的并发性总是显式的。</p>
-<h2 id="懒启动的异步">懒启动的异步</h2>
-<p>另外，<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html">async</a>可以通过将其<code>start</code>参数设置为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-start/-l-a-z-y/index.html">CoroutineStart.LAZY</a>而变成懒启动。在这种模式下，只有当<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/await.html">await</a>需要它的结果时，或者它的`Job'的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/start.html">start</a>函数被调用时，它才会启动coroutine。运行下面的例子。</p>
+<h2 id="async的懒启动">async的懒启动</h2>
+<p>另外，<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html">async</a>可以通过将其<code>start</code>参数设置为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-start/-l-a-z-y/index.html">CoroutineStart.LAZY</a>而变成懒启动。在这种模式下，只有当<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/await.html">await</a>需要它的结果时，或者它的<code>Job</code>的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/start.html">start</a>函数被调用时，它才会启动coroutine。运行下面的例子。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 import kotlin.system.*
 
@@ -225,12 +224,12 @@ suspend fun doSomethingUsefulTwo(): Int {
 <pre><code class="language-text">The answer is 42
 Completed in 1017 ms
 </code></pre>
-<p>所以，这里定义了两个coroutines，但没有像前面的例子那样执行，而是通过调用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/start.html">start</a>，将具体何时开始执行的控制权交给程序员。我们首先启动 &quot;one&quot;，然后启动 &quot;two&quot;，然后等待各个coroutines的完成。</p>
+<p>这里定义了两个coroutines，但没有像前面的例子那样执行，而是通过调用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/start.html">start</a>，将具体何时开始执行的控制权交给程序员。我们首先启动 &quot;one&quot;，然后启动 &quot;two&quot;，然后等待各个coroutines的完成。</p>
 <p>请注意，如果我们只是在<code>println</code>中调用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/await.html">await</a>，而不先在单个coroutine上调用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/start.html">start</a>，这将导致顺序执行的，因为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/await.html">await</a>启动coroutine执行并等待其结束，这不是懒启动的预期行为。<code>async(start = CoroutineStart.LAZY)</code>的用例是在计算值涉及暂停功能的情况下替代标准<code>lazy</code>函数。</p>
-<h2 id="异步风格的函数">异步风格的函数</h2>
-<p>我们可以定义异步风格的函数，使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html">async</a> coroutine构建器来异步调用<code>doSomethingUsefulOne</code>和<code>doSomethingUsefulTwo</code>，使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html">GlobalScope</a>引用来选择退出结构化并发。我们用&quot;......Async &quot;后缀来命名这类函数，以强调它们使用异步计算，人们需要使用返回的延迟值来获取结果。</p>
+<h2 id="async风格的函数">async风格的函数</h2>
+<p>我们可以定义异步风格的函数，使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html">async</a> 作为coroutine构建器来异步调用<code>doSomethingUsefulOne</code>和<code>doSomethingUsefulTwo</code>，配合<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html">GlobalScope</a>的引用来选择退出结构化并发。我们一般会用&quot;......Async &quot;作为后缀来命名这类函数，以强调它们使用异步方式执行，人们需要使用它返回的延迟值来获取结果。</p>
 <blockquote>
-<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html">GlobalScope</a>是一个精致的API，其中之一将在下面解释，所以你必须明确地选择使用<code>GlobalScope</code>与<code>@OptIn(DelicateCoroutinesApi::class)</code></p>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html">GlobalScope</a>是一个精致的API，将在下面解释，你必须显式地选择使用<code>GlobalScope</code>与<code>@OptIn(DelicateCoroutinesApi::class)</code></p>
 </blockquote>
 <pre><code class="language-kotlin">// The result type of somethingUsefulOneAsync is Deferred&lt;Int&gt;
 @OptIn(DelicateCoroutinesApi::class)
@@ -245,7 +244,7 @@ fun somethingUsefulTwoAsync() = GlobalScope.async {
 }
 </code></pre>
 <p>请注意，这些<code>xxxAsync</code>函数不是<em>suspending</em>函数。它们可以从任何地方使用。然而，使用它们意味着是异步<em>并发</em> 执行。</p>
-<p>下面的例子介绍它们在coroutine之外的使用。</p>
+<p>下面的例子介绍它们如何在coroutine之外的使用。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 import kotlin.system.*
 
@@ -291,18 +290,18 @@ suspend fun doSomethingUsefulTwo(): Int {
 Completed in 1175 ms
 </code></pre>
 <blockquote>
-<p>这种带有异步函数的编程风格在这里只是为了说明问题，因为它在其他编程语言中是一种流行的风格。在Kotlin coroutines中使用这种风格是<strong>强烈反对</strong>的，原因如下</p>
+<p>这种异步函数的编程风格在这里提出只是为了说明问题，因为它在其他编程语言中是一种比较流行的风格。但在Kotlin coroutines中使用这种风格是<strong>强烈反对</strong>的，原因如下</p>
 </blockquote>
-<p>考虑一下，如果在<code>val one = somethingUsefulOneAsync()</code> 和 <code>one.await()</code>表达式之间，代码中出现了一些逻辑错误，程序抛出了一个异常，程序正在进行的操作就会中止。通常情况下，一个全局错误处理程序可以捕获这个异常，为开发者记录和报告这个错误，但程序可以继续进行其他操作。然而，在这里我们看到<code>somethingUsefulOneAsync</code>仍然在后台运行，尽管启动它的操作被中止了。这个问题在结构化并发中不会发生，如下节所示。</p>
+<p>设想一下，如果在<code>val one = somethingUsefulOneAsync()</code> 和 <code>one.await()</code>表达式之间，代码中出现了一些逻辑错误，程序抛出了一个异常，程序正在进行的操作就会中止。通常情况下，程序的全局错误处理会捕获这个异常，并报告这个错误，但程序可以继续进行其他操作。然而，在这里我们看到<code>somethingUsefulOneAsync</code>仍然在后台运行，尽管启动它的操作被中止了。这个问题在结构化并发中不会发生，如下节所示。</p>
 <h2 id="使用async进行-结构化并发">使用async进行 结构化并发</h2>
-<p>让我们以<a href="#concurrent-using-async">Concurrent using async</a>为例，提取一个函数来并发执行<code>doSomethingUsefulOne</code>和<code>doSomethingUsefulTwo</code>并返回其结果的总和。因为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html">async</a> coroutine builder被定义为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>的扩展，我们需要在作用域中拥有它，这就是<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html">coroutineScope</a>函数所提供的。</p>
+<p>让我们以<a href="#concurrent-using-async">Concurrent using async</a>为例，提取一个函数来并发执行<code>doSomethingUsefulOne</code>和<code>doSomethingUsefulTwo</code>并返回其结果的总和。因为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html">async</a> coroutine builder是CoroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html)的扩展，我们可以在作用域中使用它。</p>
 <pre><code class="language-kotlin">suspend fun concurrentSum(): Int = coroutineScope {
     val one = async { doSomethingUsefulOne() }
     val two = async { doSomethingUsefulTwo() }
     one.await() + two.await()
 }
 </code></pre>
-<p>这样，如果 &quot;concurrentSum &quot;函数的代码出了问题，它抛出了一个异常，所有在其范围内启动的程序都会被取消。</p>
+<p>这样，如果 <code>concurrentSum</code>函数的代码出了问题，它抛出了一个异常，所有在其范围内启动的程序都会被取消。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 import kotlin.system.*
 
@@ -331,11 +330,11 @@ suspend fun doSomethingUsefulTwo(): Int {
     return 29
 }
 </code></pre>
-<p>从上述`main'函数的输出中可以看出，我们仍然有两个操作的并发执行。</p>
+<p>从上述 <code>main</code>函数的输出中可以看出，两个操作依然是并发执行。</p>
 <pre><code class="language-text">The answer is 42
 Completed in 1017 ms
 </code></pre>
-<p>取消总是通过coroutines的层次结构传播。</p>
+<p>取消总是通过coroutines的按层次传播的。</p>
 <pre><code class="language-kotlin">import kotlinx.coroutines.*
 
 fun main() = runBlocking&lt;Unit&gt; {
@@ -363,7 +362,7 @@ suspend fun failedConcurrentSum(): Int = coroutineScope {
 }
 
 </code></pre>
-<p>请注意第一个<code>async</code> 和等待中的父类是如何在其中一个子类（即<code>two</code>）失败时被取消的。</p>
+<p>请注意第一个<code>async</code> 和等待中的父类是如何被<code>two</code>失败而被取消的。</p>
 <pre><code class="language-text">Second child throws an exception
 First child was cancelled
 Computation failed with ArithmeticException
