@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627529004859">
+<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627529121618">
 <link rel="stylesheet" href="https://waltcow.github.io/styles/main.css">
 
 
@@ -46,7 +46,7 @@ Coroutine 中的context 是一..." />
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://waltcow.github.io">
-        <img src="https://waltcow.github.io/images/avatar.png?v=1627529004859" class="site-logo">
+        <img src="https://waltcow.github.io/images/avatar.png?v=1627529121618" class="site-logo">
         <h1 class="site-title">waltcow</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -492,7 +492,7 @@ Post-main, current thread: Thread[main @coroutine#1,5,main], thread local value:
 <p>我们很容易忘记设置相应的context变量。如果运行coroutine程序的Thread不同，那么从coroutine访问的线程本地变量可能会有一个意外的值。为了避免这种情况，建议使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/ensure-present.html">ensurePresent</a>方法，并在不适当的调用中 <em>fail-fast</em> 。</p>
 <p><code>ThreadLocal</code>具有优先的支持，可以任何<code>kotlinx.coroutines</code>提供的接口中使用。但它有一个重要的限制：当thread-local被改变时，新的值不会传播给coroutine调用者（因为context变量不能跟踪<code>ThreadLocal</code>对象的访问），更新的值会在下一次suspend时丢失。当然你可以使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html">withContext</a>来更新coroutine中thread-local的值，更多细节见<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/as-context-element.html">asContextElement</a>。</p>
 <p>另外，一个值可以存储在一个可变的容器中，如<code>class Counter(var i: Int)</code>，它又被存储在线程局部变量中。然而，在这种情况下，你要对这个变量会被进行潜在的并发修改进行管理。</p>
-<p>对于高级用法，例如与日志MDC、context事务性，或任何其他内部使用thread-locals传递数据的库，请参阅对应实现的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-thread-context-element/index.html">ThreadContextElement</a>接口的文档。</p>
+<p>对于高级用法，例如与日志MDC、context事务性，或其他内部使用thread-locals传递数据的库，请参阅对应实现的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-thread-context-element/index.html">ThreadContextElement</a>接口的文档。</p>
 
             </div>
             
