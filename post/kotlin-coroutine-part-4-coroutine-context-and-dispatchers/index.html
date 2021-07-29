@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Kotlin Coroutine Part 4. Coroutine context and dispatchers | waltcow</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627529004859">
+<link rel="stylesheet" href="https://waltcow.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.1.0/build/styles/atom-one-dark.min.css">
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.1.0/build/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZYD6WR6G0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0ZYD6WR6G0');
+</script>
+
+
+    <meta name="description" content="这一节将介绍Coroutine 的上下文和调度器的使用
+
+Coroutine总是在某些context中执行，这些context都是Kotlin标准库中定义的CoroutineContext类型。
+Coroutine 中的context 是一..." />
+    <meta name="keywords" content="kotlin" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://waltcow.github.io">
+        <img src="https://waltcow.github.io/images/avatar.png?v=1627529004859" class="site-logo">
+        <h1 class="site-title">waltcow</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://github.com/waltcow" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      Do have faith in what you're doing.
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/waltcow" target="_blank">waltcow</a> | <a class="rss" href="https://waltcow.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Kotlin Coroutine Part 4. Coroutine context and dispatchers</h2>
+            <div class="post-date">2021-07-29</div>
+            
+              <div class="feature-container" style="background-image: url('https://i.loli.net/2021/07/27/M7rXnJCgw9cdmsl.jpg')">
+              </div>
+            
+            <div class="post-content" v-pre>
+              <p>这一节将介绍Coroutine 的上下文和调度器的使用</p>
+<!-- more -->
+<p>Coroutine总是在某些context中执行，这些context都是Kotlin标准库中定义的<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/">CoroutineContext</a>类型。</p>
+<p>Coroutine 中的context 是一个多个变量集合。主要的变量是我们之前提到过的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>，以及它的<em>dispatcher</em>，这部分会在这节会提到。</p>
+<h2 id="dispatchers和thread">Dispatchers和Thread</h2>
+<p>Coroutine 的context包括一个<em>coroutine dispatcher</em>（见<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-dispatcher/index.html">CoroutineDispatcher</a>），它决定了对应的coroutine使用什么线程来执行。Coroutine dispatcher可以将coroutine的执行限制在一个特定的线程中，或将其分派调度到一个线程池中执行，或让它不受限制地运行。</p>
+<p>所有coroutine的构建器如<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html">launch</a>和<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html">async</a>, 都接受一个可选的<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/">CoroutineContext</a>参数，可以用来指定新coroutine的 <em>dispatcher</em> 和context上的其他变量。</p>
+<p>试试下面的例子</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    launch { // context of the parent, main runBlocking coroutine
+        println(&quot;main runBlocking      : I'm working in thread ${Thread.currentThread().name}&quot;)
+    }
+    launch(Dispatchers.Unconfined) { // not confined -- will work with main thread
+        println(&quot;Unconfined            : I'm working in thread ${Thread.currentThread().name}&quot;)
+    }
+    launch(Dispatchers.Default) { // will get dispatched to DefaultDispatcher 
+        println(&quot;Default               : I'm working in thread ${Thread.currentThread().name}&quot;)
+    }
+    launch(newSingleThreadContext(&quot;MyOwnThread&quot;)) { // will get its own new thread
+        println(&quot;newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}&quot;)
+    }
+//sampleEnd    
+}
+</code></pre>
+<p>输出结果如下：</p>
+<pre><code class="language-text">Unconfined            : I'm working in thread main
+Default               : I'm working in thread DefaultDispatcher-worker-1
+newSingleThreadContext: I'm working in thread MyOwnThread
+main runBlocking      : I'm working in thread main
+</code></pre>
+<p>当<code>launch { ... }</code> 以无参数的方式启动时，它继承了它调用者的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>的context（也就是调度器）。在上面的例子中，它继承了在 <code>main</code>线程中运行的 <code>runBlocking</code> 的context。</p>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-unconfined.html">Dispatchers.Unconfined</a>是一个特殊的调度器，看起来也是在<code>main</code>线程中运行，但事实上，它是一种不同的机制，后面会解释。</p>
+<p>当在作用域中没有明确指定其他调度器时，会使用默认的调度器。它由<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html">Dispatchers.Default</a>表示，并使用一个共享的后台线程池。</p>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/new-single-thread-context.html">newSingleThreadContext</a>为coroutine创建一个线程来运行。一个专门的线程是一种非常昂贵的资源。在实际应用中，当线程不再需要时，必须使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-executor-coroutine-dispatcher/close.html">close</a>函数将其释放，或者将其存储在一个顶层变量中，在整个应用中重复使用。</p>
+<h2 id="非封闭式和封闭式dispatchers">非封闭式和封闭式Dispatchers</h2>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-unconfined.html">Dispatchers.Unconfined</a>  dispatcher会在调用者线程中，当直到第一个暂停点才启动一个coroutine。</p>
+<p>在暂停之后，该coroutine的恢复完全由被调用的暂停函数的线程所决定 。<em>Unconfined dispatcher</em> 适合于那种处在一个特定线程内执行既不消耗CPU，也不更新任何共享数据（如UI）的coroutines。</p>
+<p>在另一边，<em>dispatcher</em> 默认从外部 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a> 继承。譬如 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html">runBlocking</a> coroutine中默认的dispatcher将会被限制在调用者线程中。因此它的coroutine将限制在这个线程中并遵循FIFO调度</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    launch(Dispatchers.Unconfined) { // not confined -- will work with main thread
+        println(&quot;Unconfined      : I'm working in thread ${Thread.currentThread().name}&quot;)
+        delay(500)
+        println(&quot;Unconfined      : After delay in thread ${Thread.currentThread().name}&quot;)
+    }
+    launch { // context of the parent, main runBlocking coroutine
+        println(&quot;main runBlocking: I'm working in thread ${Thread.currentThread().name}&quot;)
+        delay(1000)
+        println(&quot;main runBlocking: After delay in thread ${Thread.currentThread().name}&quot;)
+    }
+//sampleEnd    
+}
+</code></pre>
+<p>输出结果如下：</p>
+<pre><code class="language-text">Unconfined      : I'm working in thread main
+main runBlocking: I'm working in thread main
+Unconfined      : After delay in thread kotlinx.coroutines.DefaultExecutor
+main runBlocking: After delay in thread main
+</code></pre>
+<p>因此，从 <code>runBlocking {...}</code>继承的上下文的coroutine将继续在<code>main</code>线程中执行，而<em>Unconfined</em>的coroutine则在<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/delay.html">delay</a>函数使用的默认执行器线程中恢复。</p>
+<blockquote>
+<p>Unconfined 调度器是一种先进的实现机制，在某些个别的情况下可能会很有用，在这些情况下，不需要为以后的cououtine指定dispatcher，或者产生不想要的side-effects, 因为coroutine中的一些操作必须立即执行。在一般的代码中不应该使用unconfined dispatcher。</p>
+</blockquote>
+<h2 id="调试-coroutines-和-threads">调试 Coroutines 和 Threads</h2>
+<p>Coroutine可以在一个线程上暂停，在另一个线程上恢复。即使是同处一个Thread调度器，如果你没有特殊的工具，可能也很难弄清楚这个程序在做什么，在哪里做，什么时候做。</p>
+<h3 id="用idea进行调试">用IDEA进行调试</h3>
+<p>Kotlin插件的Coroutine调试器简化了在IntelliJ IDEA中调试coroutine的工作。</p>
+<blockquote>
+<p>调试器适用于1.3.8或更高版本的<code>kotlinx-coroutines-core</code></p>
+</blockquote>
+<p>在<strong>调试</strong>工具窗口中包含<strong>程序</strong>标签。在这个Tab中，你可以找到关于当前运行和暂停的程序的信息。这些程序按它们所运行的调度器进行分组。</p>
+<figure data-type="image" tabindex="1"><img src="https://raw.githubusercontent.com/Kotlin/kotlinx.coroutines/master/docs/images/coroutine-debug-1.png" alt="Debugging coroutines" loading="lazy"></figure>
+<p>使用coroutine调试器，你可以。</p>
+<ul>
+<li>检查每个coroutine的状态。</li>
+<li>查看正在运行和暂停的coroutine的local变量和captured变量的值。</li>
+<li>查看完整的coroutine创建栈，以及coroutine内部的调用栈。堆栈包括所有带有变量值的帧，甚至那些在标准调试过程中会丢失的帧。</li>
+<li>获得一个完整的报告，其中包含每个程序的状态和它的堆栈。要获得它，在<strong>程序</strong>标签内点击右键，然后点击<strong>Get Coroutines Dump</strong>。</li>
+</ul>
+<p>要开始进行coroutine调试，你只需要设置断点并在调试模式下运行应用程序。</p>
+<p>在 <a href="https://kotlinlang.org/docs/tutorials/coroutines/debug-coroutines-with-idea.html">教程</a>中了解更多关于coroutines调试的信息。</p>
+<h3 id="使用日志进行调试">使用日志进行调试</h3>
+<p>在没有Coroutine Debugger的情况下，调试应用程序的另一种方法是在每个日志语句中打印日志文件中的线程名称。这个功能被普遍日志框架支持。当使用coroutines时，单单是线程名称并不能提供太多的context 信息，为了使其更容易调试，<code>kotlinx.coroutines</code>包含了调试工具。</p>
+<p>使用<code>-Dkotlinx.coroutines.debug</code>JVM选项运行以下代码。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+fun log(msg: String) = println(&quot;[${Thread.currentThread().name}] $msg&quot;)
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    val a = async {
+        log(&quot;I'm computing a piece of the answer&quot;)
+        6
+    }
+    val b = async {
+        log(&quot;I'm computing another piece of the answer&quot;)
+        7
+    }
+    log(&quot;The answer is ${a.await() * b.await()}&quot;)
+//sampleEnd    
+}
+</code></pre>
+<p>上面包含三个coroutines程序。<code>runBlocking</code>中的主程序（#1）和两个计算延迟值<code>a</code>（#2）和<code>b</code>（#3）的程序。它们都是在<code>runBlocking</code>的context中执行的，并且被限制在<code>main</code>线程中。</p>
+<p>这段代码的输出是</p>
+<pre><code class="language-text">[main @coroutine#2] I'm computing a piece of the answer
+[main @coroutine#3] I'm computing another piece of the answer
+[main @coroutine#1] The answer is 42
+</code></pre>
+<p><code>log</code>函数在方括号中打印出线程的名称，你可以看到它是<code>main</code>线程，上面附加了当前执行的coroutine的标识。当调试模式开启时，这个标识符会分配给所有创建的coroutines。</p>
+<blockquote>
+<p>当JVM以<code>-ea</code>选项运行时，调试模式也被打开。你可以在 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-d-e-b-u-g_-p-r-o-p-e-r-t-y_-n-a-m-e.html">DEBUG_PROPERTY_NAME</a> 阅读更多关于调试设施的信息</p>
+</blockquote>
+<h2 id="threads之间的跳转">Threads之间的跳转</h2>
+<p>使用<code>-Dkotlinx.coroutines.debug</code>JVM选项运行以下代码（见<a href="#debugging-coroutines-and-threads">debug</a>）</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+fun log(msg: String) = println(&quot;[${Thread.currentThread().name}] $msg&quot;)
+
+fun main() {
+//sampleStart
+    newSingleThreadContext(&quot;Ctx1&quot;).use { ctx1 -&gt;
+        newSingleThreadContext(&quot;Ctx2&quot;).use { ctx2 -&gt;
+            runBlocking(ctx1) {
+                log(&quot;Started in ctx1&quot;)
+                withContext(ctx2) {
+                    log(&quot;Working in ctx2&quot;)
+                }
+                log(&quot;Back to ctx1&quot;)
+            }
+        }
+    }
+//sampleEnd    
+}
+</code></pre>
+<p>上面演示了几种新特性。一个是使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html">runBlocking</a>明确指定的context，另一个是使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html">withContext</a>函数来改变一个coroutine的context，同时仍然保持在同一个coroutine中，你可以在下面的输出中看到。</p>
+<pre><code class="language-text">[Ctx1 @coroutine#1] Started in ctx1
+[Ctx2 @coroutine#1] Working in ctx2
+[Ctx1 @coroutine#1] Back to ctx1
+</code></pre>
+<p>请注意，这个例子也使用了Kotlin标准库中的<code>use</code>函数，用来在不再需要时释放出创建出来的Thread [newSingleThreadContext]（https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/new-single-thread-context.html）创建的线程。</p>
+<h2 id="context中的job">Context中的Job</h2>
+<p>Coroutine的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>是其context的一部分，你可以使用<code>coroutineContext[Job]</code>表达式拿到。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    println(&quot;My job is ${coroutineContext[Job]}&quot;)
+//sampleEnd    
+}
+</code></pre>
+<p>在<a href="#debugging-coroutines-and-threads">调试模式</a>下，它的输出结果是这样的。</p>
+<pre><code>My job is &quot;coroutine#1&quot;:BlockingCoroutine{Active}@6d311334
+</code></pre>
+<p>注意，<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>中的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/is-active.html">isActive</a>只是<code>coroutineContext[Job]?.isActive == true</code>的shortcut而已。</p>
+<h2 id="coroutine的层级结构">Coroutine的层级结构</h2>
+<p>当一个coroutine在另一个coroutine的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>中启动时，它通过<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/coroutine-context.html">CoroutineScope.coroutineContext</a>继承其context，新建的coroutine中的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>成为父级coroutine的Job的child。当父级coroutine被取消时，它下面所有child coroutine也会被递归地取消。</p>
+<p>然而，这种父子关系可以通过以下两种方式之一显式声明推翻。</p>
+<ol>
+<li>当启动一个cououtine时明确指定了一个不同的context（例如，<code>GlobalScope.launch</code>），那么它就不会从父级context继承<code>Job</code>。</li>
+<li>当一个不同的<code>Job</code>对象被传递作为新的coroutine的context时（如下面的例子所示），那么它将覆盖父级context中的<code>Job</code>。</li>
+</ol>
+<p>在这两种情况下，启动的coroutine都是独立运行，不与它所启动的context相联系。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    // launch a coroutine to process some kind of incoming request
+    val request = launch {
+        // it spawns two other jobs
+        launch(Job()) { 
+            println(&quot;job1: I run in my own Job and execute independently!&quot;)
+            delay(1000)
+            println(&quot;job1: I am not affected by cancellation of the request&quot;)
+        }
+        // and the other inherits the parent context
+        launch {
+            delay(100)
+            println(&quot;job2: I am a child of the request coroutine&quot;)
+            delay(1000)
+            println(&quot;job2: I will not execute this line if my parent request is cancelled&quot;)
+        }
+    }
+    delay(500)
+    request.cancel() // cancel processing of the request
+    delay(1000) // delay a second to see what happens
+    println(&quot;main: Who has survived request cancellation?&quot;)
+//sampleEnd
+}
+</code></pre>
+<p>这段代码的输出是：</p>
+<pre><code class="language-text">job1: I run in my own Job and execute independently!
+job2: I am a child of the request coroutine
+job1: I am not affected by cancellation of the request
+main: Who has survived request cancellation?
+</code></pre>
+<h2 id="父级coroutine的职责">父级Coroutine的职责</h2>
+<p>父级coroutine总是等待其所有子级coroutine的执行完成。父级coroutine不必关心它下面子程序的启动，也不必使用子程序们的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html">Job.join</a>来等待它们结束。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    // launch a coroutine to process some kind of incoming request
+    val request = launch {
+        repeat(3) { i -&gt; // launch a few children jobs
+            launch  {
+                delay((i + 1) * 200L) // variable delay 200ms, 400ms, 600ms
+                println(&quot;Coroutine $i is done&quot;)
+            }
+        }
+        println(&quot;request: I'm done and I don't explicitly join my children that are still active&quot;)
+    }
+    request.join() // wait for completion of the request, including all its children
+    println(&quot;Now processing of the request is complete&quot;)
+//sampleEnd
+}
+</code></pre>
+<p>这段代码的输出是：</p>
+<pre><code class="language-text">request: I'm done and I don't explicitly join my children that are still active
+Coroutine 0 is done
+Coroutine 1 is done
+Coroutine 2 is done
+Now processing of the request is complete
+</code></pre>
+<h2 id="为调试中的coroutines-命名">为调试中的coroutines 命名</h2>
+<p>当你使用coroutine时打印日志，为coroutine分配不同id有助于把相同coroutine的日志记录关联起来。然而，当一个coroutine与处理一个特定的请求或做一些后台任务 联系在一起时，为了调试的目的，最好先显式地命名它。在context 中的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-name/index.html">CoroutineName</a> 作用与线程名相同。当<a href="#debugging-coroutines-and-threads">debugging mode</a>开启时，它被包含在执行这个coroutine的线程名称中。</p>
+<p>下面的例子演示下这个概念。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+fun log(msg: String) = println(&quot;[${Thread.currentThread().name}] $msg&quot;)
+
+fun main() = runBlocking(CoroutineName(&quot;main&quot;)) {
+//sampleStart
+    log(&quot;Started main coroutine&quot;)
+    // run two background value computations
+    val v1 = async(CoroutineName(&quot;v1coroutine&quot;)) {
+        delay(500)
+        log(&quot;Computing v1&quot;)
+        252
+    }
+    val v2 = async(CoroutineName(&quot;v2coroutine&quot;)) {
+        delay(1000)
+        log(&quot;Computing v2&quot;)
+        6
+    }
+    log(&quot;The answer for v1 / v2 = ${v1.await() / v2.await()}&quot;)
+//sampleEnd    
+}
+</code></pre>
+<p>使用<code>-Dkotlinx.coroutines.debug</code>JVM选项，它产生下面的输出。</p>
+<pre><code class="language-text">[main @main#1] Started main coroutine
+[main @v1coroutine#2] Computing v1
+[main @v2coroutine#3] Computing v2
+[main @main#1] The answer for v1 / v2 = 42
+</code></pre>
+<h2 id="结合context的变量">结合context的变量</h2>
+<p>有时我们需要在coroutine中的context定义多个变量。我们可以使用<code>+</code>操作符来实现这一点。例如，我们可以同时显式指定调度器和coroutine的名字后再启动coroutine。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    launch(Dispatchers.Default + CoroutineName(&quot;test&quot;)) {
+        println(&quot;I'm working in thread ${Thread.currentThread().name}&quot;)
+    }
+//sampleEnd    
+}
+</code></pre>
+<p>使用<code>-Dkotlinx.coroutines.debug</code>JVM选项，它产生下面的输出。</p>
+<pre><code class="language-text">I'm working in thread DefaultDispatcher-worker-1 @test#2
+</code></pre>
+<h2 id="coroutine-作用域">Coroutine 作用域</h2>
+<p>让我们把关于contexts、子coroutine和job的几个概念放在一起讨论下。假设我们的应用程序有一个关于生命周期的对象，但这个对象并不是一个coroutine。例如，我们正在编写一个Android应用程序，并在一个Android Activity的context中启动多个coroutine来执行异步操作来获取更新数据，做动画特效，等等。当Activity被销毁时，所有这些coroutine都必须被取消，以避免内存泄漏。当然，我们可以绑定Activity的生命周期，手动操作context和job来管理coroutine。在此之外 <code>kotlinx.coroutines</code>还提供了一个抽象的封装 -- <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>。你应该已经熟悉了 <em>CoroutineScope</em> ，因为所有的coroutine构建器都是它的扩展。</p>
+<p>我们通过创建<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>的实例来管理我们coroutine的生命周期，该实例与Activity的生命周期相绑定。一个 <code>CoroutineScope</code> 实例可以由<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope.html">CoroutineScope()</a>或<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-main-scope.html">MainScope()</a> 创建。前者创建了一个通用的context，而后者为UI应用程序创建了一个作用域，并使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-main.html">Dispatchers.Main</a>作为默认的dispatcher。</p>
+<pre><code class="language-kotlin">class Activity {
+    private val mainScope = MainScope()
+    
+    fun destroy() {
+        mainScope.cancel()
+    }
+    // to be continued ...
+</code></pre>
+<p>现在，我们在这个 &quot;Activity &quot;的范围内，可以通过 <code>scope</code>来启动coroutines。在这个demo中，我们启动了十个延迟不同时间的coroutines。</p>
+<pre><code class="language-kotlin">    // class Activity continues
+    fun doSomething() {
+        // launch ten coroutines for a demo, each working for a different time
+        repeat(10) { i -&gt;
+            mainScope.launch {
+                delay((i + 1) * 200L) // variable delay 200ms, 400ms, ... etc
+                println(&quot;Coroutine $i is done&quot;)
+            }
+        }
+    }
+} // class Activity ends
+</code></pre>
+<p>在我们的main函数中，我们创建了Activity，调用了 <code>doSomething</code>函数，并在500ms后销毁Activity。这就取消了所有从<code>doSomething</code>启动的coroutines。我们会发现，在Activity销毁后，即使我们再等一会儿，也不会有更多的消息被打印出来。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+class Activity {
+    private val mainScope = CoroutineScope(Dispatchers.Default) // use Default for test purposes
+    
+    fun destroy() {
+        mainScope.cancel()
+    }
+
+    fun doSomething() {
+        // launch ten coroutines for a demo, each working for a different time
+        repeat(10) { i -&gt;
+            mainScope.launch {
+                delay((i + 1) * 200L) // variable delay 200ms, 400ms, ... etc
+                println(&quot;Coroutine $i is done&quot;)
+            }
+        }
+    }
+} // class Activity ends
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    val activity = Activity()
+    activity.doSomething() // run test function
+    println(&quot;Launched coroutines&quot;)
+    delay(500L) // delay for half a second
+    println(&quot;Destroying activity!&quot;)
+    activity.destroy() // cancels all coroutines
+    delay(1000) // visually confirm that they don't work
+//sampleEnd    
+}
+</code></pre>
+<p>这段代码的输出是</p>
+<pre><code class="language-text">Launched coroutines
+Coroutine 0 is done
+Coroutine 1 is done
+Destroying activity!
+</code></pre>
+<p>正如你所看到的，只有前两个coroutines打印了一条消息，其他的都被<code>Activity.destroy()</code>中的一次<code>job.cancel()</code>调用取消了。</p>
+<blockquote>
+<p>注意，Android在所有entities的lifecycle中，都有对coroutine scope的优先支持。参见<a href="https://developer.android.com/topic/libraries/architecture/coroutines#lifecyclescope">相应的文档</a>。</p>
+</blockquote>
+<h3 id="thread局部数据">Thread局部数据</h3>
+<p>有时，如果可以将一些Thread本地的数据传递给coroutines或在coroutines之间传递，那么就很方便了。然而，由于coroutines没有被绑定到任何特定的Thread，如果手动处理绑定的话将相当十分笨拙。</p>
+<p>针对 <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/ThreadLocal.html">ThreadLocal</a>，在这里我们可以使用 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/as-context-element.html">asContextElement</a>扩展函数来实现。它创建一个额外的context，用来记录给定的<code>ThreadLocal</code>的值，并在每次coroutine切换context时恢复它。</p>
+<p>看下面的演示:</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+
+val threadLocal = ThreadLocal&lt;String?&gt;() // declare thread-local variable
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    threadLocal.set(&quot;main&quot;)
+    println(&quot;Pre-main, current thread: ${Thread.currentThread()}, thread local value: '${threadLocal.get()}'&quot;)
+    val job = launch(Dispatchers.Default + threadLocal.asContextElement(value = &quot;launch&quot;)) {
+        println(&quot;Launch start, current thread: ${Thread.currentThread()}, thread local value: '${threadLocal.get()}'&quot;)
+        yield()
+        println(&quot;After yield, current thread: ${Thread.currentThread()}, thread local value: '${threadLocal.get()}'&quot;)
+    }
+    job.join()
+    println(&quot;Post-main, current thread: ${Thread.currentThread()}, thread local value: '${threadLocal.get()}'&quot;)
+//sampleEnd    
+}
+</code></pre>
+<p>在这个例子中，我们使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html">Dispatchers.Default</a>在后台线程池中启动了一个新的coroutine，因此它在与线程池不同的线程上工作，但它依然可以访问通过<code>threadLocal.asContextElement(value = &quot;launch&quot;)</code>定义的Thread局部变量的值，不管coroutine在哪个Thread上执行。</p>
+<p>因此调试下输出是:</p>
+<pre><code class="language-text">Pre-main, current thread: Thread[main @coroutine#1,5,main], thread local value: 'main'
+Launch start, current thread: Thread[DefaultDispatcher-worker-1 @coroutine#2,5,main], thread local value: 'launch'
+After yield, current thread: Thread[DefaultDispatcher-worker-2 @coroutine#2,5,main], thread local value: 'launch'
+Post-main, current thread: Thread[main @coroutine#1,5,main], thread local value: 'main'
+</code></pre>
+<p>我们很容易忘记设置相应的context变量。如果运行coroutine程序的Thread不同，那么从coroutine访问的线程本地变量可能会有一个意外的值。为了避免这种情况，建议使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/ensure-present.html">ensurePresent</a>方法，并在不适当的调用中 <em>fail-fast</em> 。</p>
+<p><code>ThreadLocal</code>具有优先的支持，可以任何<code>kotlinx.coroutines</code>提供的接口中使用。但它有一个重要的限制：当thread-local被改变时，新的值不会传播给coroutine调用者（因为context变量不能跟踪<code>ThreadLocal</code>对象的访问），更新的值会在下一次suspend时丢失。当然你可以使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html">withContext</a>来更新coroutine中thread-local的值，更多细节见<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/as-context-element.html">asContextElement</a>。</p>
+<p>另外，一个值可以存储在一个可变的容器中，如<code>class Counter(var i: Int)</code>，它又被存储在线程局部变量中。然而，在这种情况下，你要对这个变量会被进行潜在的并发修改进行管理。</p>
+<p>对于高级用法，例如与日志MDC、context事务性，或任何其他内部使用thread-locals传递数据的库，请参阅对应实现的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-thread-context-element/index.html">ThreadContextElement</a>接口的文档。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://waltcow.github.io/tag/JLYRMSPYa/" class="tag">
+                    kotlin
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://waltcow.github.io/post/kotlin-coroutine-part-3-composing-suspending-functions/">
+                  <h3 class="post-title">
+                    Kotlin Coroutine Part 3. Composing suspending functions
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>
