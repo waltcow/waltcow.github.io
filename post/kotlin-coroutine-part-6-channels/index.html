@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Kotlin Coroutine Part 6. Channels | waltcow</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627632375960">
+<link rel="stylesheet" href="https://waltcow.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.1.0/build/styles/atom-one-dark.min.css">
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.1.0/build/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZYD6WR6G0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0ZYD6WR6G0');
+</script>
+
+
+    <meta name="description" content="Deferred为coroutine之间传递一个单值提供了方法。Channels提供了一种传递stream的方法。
+
+Channel 基本概念
+Channel在概念上与 BlockingQueue非常相似。主要的区别是，它没有阻塞的 put..." />
+    <meta name="keywords" content="kotlin" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://waltcow.github.io">
+        <img src="https://waltcow.github.io/images/avatar.png?v=1627632375960" class="site-logo">
+        <h1 class="site-title">waltcow</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://github.com/waltcow" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      Do have faith in what you're doing.
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/waltcow" target="_blank">waltcow</a> | <a class="rss" href="https://waltcow.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Kotlin Coroutine Part 6. Channels</h2>
+            <div class="post-date">2021-07-30</div>
+            
+              <div class="feature-container" style="background-image: url('https://i.loli.net/2021/07/27/M7rXnJCgw9cdmsl.jpg')">
+              </div>
+            
+            <div class="post-content" v-pre>
+              <p>Deferred为coroutine之间传递一个单值提供了方法。<em>Channels</em>提供了一种传递stream的方法。</p>
+<!-- more -->
+<h2 id="channel-基本概念">Channel 基本概念</h2>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-channel/index.html">Channel</a>在概念上与 <code>BlockingQueue</code>非常相似。主要的区别是，它没有阻塞的 <code>put</code>操作，而是有个暂停<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/send.html">发送</a>，也没有阻塞的 <code>take</code>操作，而有暂停<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/receive.html">接收</a>。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+fun main() = runBlocking {
+//sampleStart
+    val channel = Channel&lt;Int&gt;()
+    launch {
+        // this might be heavy CPU-consuming computation or async logic, we'll just send five squares
+        for (x in 1..5) channel.send(x * x)
+    }
+    // here we print five received integers:
+    repeat(5) { println(channel.receive()) }
+    println(&quot;Done!&quot;)
+//sampleEnd
+}
+</code></pre>
+<p>代码输出是：</p>
+<pre><code class="language-text">1
+4
+9
+16
+25
+Done!
+</code></pre>
+<h2 id="channels的关闭和迭代">channels的关闭和迭代</h2>
+<p>与queue不同，channel可以被关闭，以表明没有更多的元素会到来。在接收方，使用一个常规的<code>for</code>循环就能接收channel中的元素。</p>
+<p>从概念上讲，<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/close.html">close</a>就像向channel发送一个特殊的关闭token。一旦收到这个关闭的token，迭代就会停止，因此可以保证在关闭之前所有先前发送的元素都被收到。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+fun main() = runBlocking {
+//sampleStart
+    val channel = Channel&lt;Int&gt;()
+    launch {
+        for (x in 1..5) channel.send(x * x)
+        channel.close() // we're done sending
+    }
+    // here we print received values using `for` loop (until the channel is closed)
+    for (y in channel) println(y)
+    println(&quot;Done!&quot;)
+//sampleEnd
+}
+</code></pre>
+<h2 id="构建channel生产者">构建channel生产者</h2>
+<p>用coroutine产生一个sequence的模式是很常见的。这是 <em>生产者-消费者</em> 模式的一部分，经常出现在并发代码中。你可以把这样的生产者抽象成一个以channel为参数的函数，但要和函数中必须返回结果的常识有所不同。</p>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/produce.html">produce</a> 是一个方便生产者使用的coroutine构建器，还有一个扩展函数<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/consume-each.html">consumeEach</a>，可以取代消费者一方的<code>for</code>循环。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+fun CoroutineScope.produceSquares(): ReceiveChannel&lt;Int&gt; = produce {
+    for (x in 1..5) send(x * x)
+}
+
+fun main() = runBlocking {
+//sampleStart
+    val squares = produceSquares()
+    squares.consumeEach { println(it) }
+    println(&quot;Done!&quot;)
+//sampleEnd
+}
+</code></pre>
+<h2 id="pipelines">Pipelines</h2>
+<p><em>pipeline</em>是一种模式，代表着某个coroutine正在产生可能是无限值的stream。</p>
+<pre><code class="language-kotlin">fun CoroutineScope.produceNumbers() = produce&lt;Int&gt; {
+    var x = 1
+    while (true) send(x++) // infinite stream of integers starting from 1
+}
+</code></pre>
+<p>而另一个或多个coroutine正在消耗该 <em>stream</em>，做一些处理后返回其他结果。在下面的例子中返回某个数字的平方数</p>
+<pre><code class="language-kotlin">fun CoroutineScope.square(numbers: ReceiveChannel&lt;Int&gt;): ReceiveChannel&lt;Int&gt; = produce {
+    for (x in numbers) send(x * x)
+}
+</code></pre>
+<p>The main code starts and connects the whole pipeline:</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+fun main() = runBlocking {
+//sampleStart
+    val numbers = produceNumbers() // produces integers from 1 and on
+    val squares = square(numbers) // squares integers
+    repeat(5) {
+        println(squares.receive()) // print first five
+    }
+    println(&quot;Done!&quot;) // we are done
+    coroutineContext.cancelChildren() // cancel children coroutines
+//sampleEnd
+}
+
+fun CoroutineScope.produceNumbers() = produce&lt;Int&gt; {
+    var x = 1
+    while (true) send(x++) // infinite stream of integers starting from 1
+}
+
+fun CoroutineScope.square(numbers: ReceiveChannel&lt;Int&gt;): ReceiveChannel&lt;Int&gt; = produce {
+    for (x in numbers) send(x * x)
+}
+</code></pre>
+<blockquote>
+<p>所有创建coroutines的函数都被定义为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>的扩展，因此我们可以依靠[structured concurrency](file:/Users/waltcow/Codes/kotlinx.coroutines/docs/topics/composing-suspending-functions.md#structured concurrency-with-async)来确保我们的应用程序中不会全局的coroutine。</p>
+</blockquote>
+<h2 id="用pipeline处理prime-numbers">用pipeline处理prime numbers</h2>
+<p>让我们用一个例子将pipelines发挥到极致，这个例子是用coroutines的pipeline生成素数。我们从一个无限大的数字sequence开始。</p>
+<pre><code class="language-kotlin">fun CoroutineScope.numbersFrom(start: Int) = produce&lt;Int&gt; {
+    var x = start
+    while (true) send(x++) // infinite stream of integers from start
+}
+</code></pre>
+<p>下面pipeline对输入的数字流进行过滤，过滤所有能被给定的素数整除的数字。</p>
+<pre><code class="language-kotlin">fun CoroutineScope.filter(numbers: ReceiveChannel&lt;Int&gt;, prime: Int) = produce&lt;Int&gt; {
+    for (x in numbers) if (x % prime != 0) send(x)
+}
+</code></pre>
+<p>现在，我们通过从2开始的数字stream来建立pipeline，从当前pipeline中抽取一个素数，并为每一个找到的素数启动新的pipeline。</p>
+<pre><code class="language-Plain-Text">numbersFrom(2) -&gt; filter(2) -&gt; filter(3) -&gt; filter(5) -&gt; filter(7) ... 
+</code></pre>
+<p>下面的例子打印了前十个素数，在main线程的context中运行整个pipeline。由于所有的coroutines都是在主<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html">runBlocking</a>程序的范围内启动的，所以我们不需要记录已经启动的coroutines列表。我们使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/cancel-children.html">cancelChildren</a>扩展函数，在打印完前十个质数后，取消所有子coroutines。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+fun main() = runBlocking {
+//sampleStart
+    var cur = numbersFrom(2)
+    repeat(10) {
+        val prime = cur.receive()
+        println(prime)
+        cur = filter(cur, prime)
+    }
+    coroutineContext.cancelChildren() // cancel all children to let main finish
+//sampleEnd    
+}
+
+fun CoroutineScope.numbersFrom(start: Int) = produce&lt;Int&gt; {
+    var x = start
+    while (true) send(x++) // infinite stream of integers from start
+}
+
+fun CoroutineScope.filter(numbers: ReceiveChannel&lt;Int&gt;, prime: Int) = produce&lt;Int&gt; {
+    for (x in numbers) if (x % prime != 0) send(x)
+}
+</code></pre>
+<p>代码输出结果：</p>
+<pre><code class="language-text">2
+3
+5
+7
+11
+13
+17
+19
+23
+29
+</code></pre>
+<p>注意，你可以使用标准库中的<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/iterator.html"><code>iterator</code></a> coroutine builder来构建同样的pipeline。用<code>iterator</code>代替<code>produce</code>，用<code>yield</code>代替<code>send</code>，用<code>next</code>代替<code>receive</code>，用<code>Iterator</code>代替<code>ReceiveChannel</code>，并且去掉coroutine scope。你也将不需要<code>runBlocking</code>。然而，如上所示，使用channel的pipeline的好处是，如果你在<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html">Dispatchers.Default</a> context中运行，它实际上可以使用多个CPU核。</p>
+<p>总之，这是一种极其不切实际的寻找素数的方法。在实践中，pipeline确实涉及一些其他的暂停调用（比如对远程服务的异步调用），pipeline不能使用<code>sequence</code>/<code>iterator</code>构建，因为它们不允许任意暂停，不像<code>produce</code>那样完全异步。</p>
+<h2 id="fan-out">Fan-out</h2>
+<p>多个coroutines可以从同一channel接收，在它们之间分配工作。让我们从一个定期产生整数（每秒10个数字）的生产者coroutine开始讲起。</p>
+<pre><code class="language-kotlin">fun CoroutineScope.produceNumbers() = produce&lt;Int&gt; {
+    var x = 1 // start from 1
+    while (true) {
+        send(x++) // produce next
+        delay(100) // wait 0.1s
+    }
+}
+</code></pre>
+<p>然后我们有几个处理的coroutines。在这个例子中，他们只是打印他们的ID和接收数字。</p>
+<pre><code class="language-kotlin">fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel&lt;Int&gt;) = launch {
+    for (msg in channel) {
+        println(&quot;Processor #$id received $msg&quot;)
+    }    
+}
+</code></pre>
+<p>现在让我们启动五个处理器，让它们工作近一秒钟。看看会发生什么。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    val producer = produceNumbers()
+    repeat(5) { launchProcessor(it, producer) }
+    delay(950)
+    producer.cancel() // cancel producer coroutine and thus kill them all
+//sampleEnd
+}
+
+fun CoroutineScope.produceNumbers() = produce&lt;Int&gt; {
+    var x = 1 // start from 1
+    while (true) {
+        send(x++) // produce next
+        delay(100) // wait 0.1s
+    }
+}
+
+fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel&lt;Int&gt;) = launch {
+    for (msg in channel) {
+        println(&quot;Processor #$id received $msg&quot;)
+    }    
+}
+</code></pre>
+<p>输出结果将类似于下面这个，尽管接收每个特定整数的处理器ID可能不同。</p>
+<pre><code class="language-text">Processor #2 received 1
+Processor #4 received 2
+Processor #0 received 3
+Processor #1 received 4
+Processor #3 received 5
+Processor #2 received 6
+Processor #4 received 7
+Processor #0 received 8
+Processor #1 received 9
+Processor #3 received 10
+</code></pre>
+<p>请注意，取消一个生产者coroutine会关闭其channel，从而终止了处理coroutines所做的channel的迭代。另外注意，我们如何用<code>for</code>循环迭代channel，在<code>launchProcessor</code>代码中执行<code>fan-out</code>。与 <code>consumeEach</code>不同的是，这种 <code>for</code> 循环模式在多个coroutines中使用是非常安全的。如果其中一个处理的coroutine失败了，那么其他的coroutine仍然在处理通道，而通过<code>consumeEach</code>编写的处理器总是在其正常或异常完成时消耗（取消）所在的channel。</p>
+<h2 id="fan-in">Fan-in</h2>
+<p>多个coroutines可以向同一个通道发送。例如，让我们有一个字符串的channel，和一个suspend函数，它以指定的延迟反复向这个channel发送一个指定的字符串。</p>
+<pre><code class="language-kotlin">suspend fun sendString(channel: SendChannel&lt;String&gt;, s: String, time: Long) {
+    while (true) {
+        delay(time)
+        channel.send(s)
+    }
+}
+</code></pre>
+<p>现在，让我们看看如果我们启动几个发送字符串的coroutines（在这个例子中，我们在main线程的context中启动， 它们作为子coroutine）会发生什么。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+fun main() = runBlocking {
+//sampleStart
+    val channel = Channel&lt;String&gt;()
+    launch { sendString(channel, &quot;foo&quot;, 200L) }
+    launch { sendString(channel, &quot;BAR!&quot;, 500L) }
+    repeat(6) { // receive first six
+        println(channel.receive())
+    }
+    coroutineContext.cancelChildren() // cancel all children to let main finish
+//sampleEnd
+}
+
+suspend fun sendString(channel: SendChannel&lt;String&gt;, s: String, time: Long) {
+    while (true) {
+        delay(time)
+        channel.send(s)
+    }
+}
+</code></pre>
+<p>输出结果是：</p>
+<pre><code class="language-text">foo
+foo
+BAR!
+foo
+foo
+BAR!
+</code></pre>
+<h2 id="带缓冲的-channels">带缓冲的 channels</h2>
+<p>到目前为止所展示的channels没有缓冲区。无缓冲的channel在发送方和接收方相遇时传输元素（又称交会）。如果发送先被调用，那么它将被暂停，直到调用接收；如果接收先被调用，它将被暂停，直到调用发送。</p>
+<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-channel.html">Channel()</a>工厂函数和<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/produce.html">produce</a>构建器都需要可选的<code>capacity</code>参数来指定<em>缓冲区大小</em>。缓冲区允许发送者在暂停之前发送多个元素，类似于有指定容量的<code>BlockingQueue</code>，当缓冲区满了就会阻塞。看一下下面代码的行为。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+fun main() = runBlocking&lt;Unit&gt; {
+//sampleStart
+    val channel = Channel&lt;Int&gt;(4) // create buffered channel
+    val sender = launch { // launch sender coroutine
+        repeat(10) {
+            println(&quot;Sending $it&quot;) // print before sending each element
+            channel.send(it) // will suspend when buffer is full
+        }
+    }
+    // don't receive anything... just wait....
+    delay(1000)
+    sender.cancel() // cancel sender coroutine
+//sampleEnd    
+}
+</code></pre>
+<p>缓冲channels容量为<em>4</em>，打印了<em>5</em>次 &quot;sending&quot;。</p>
+<pre><code class="language-text">Sending 0
+Sending 1
+Sending 2
+Sending 3
+Sending 4
+</code></pre>
+<p>前四个元素被添加到缓冲区，当尝试发送第五个元素时，发送者会暂停。</p>
+<h2 id="平等的channels">平等的Channels</h2>
+<p>对channels的发送和接收操作是<em>公平</em> 的，它们服从多个coroutine调用的顺序。它们以先入先出的顺序提供服务，例如，第一个调用 <code>receive</code>&quot;的程序会得到该元素。在下面的例子中，有两个 <code>ping</code>和 <code>pong</code>的coroutines 正在从共享的  <code>table</code>  Channel 中接收 <code>ball</code>对象。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+//sampleStart
+data class Ball(var hits: Int)
+
+fun main() = runBlocking {
+    val table = Channel&lt;Ball&gt;() // a shared table
+    launch { player(&quot;ping&quot;, table) }
+    launch { player(&quot;pong&quot;, table) }
+    table.send(Ball(0)) // serve the ball
+    delay(1000) // delay 1 second
+    coroutineContext.cancelChildren() // game over, cancel them
+}
+
+suspend fun player(name: String, table: Channel&lt;Ball&gt;) {
+    for (ball in table) { // receive the ball in a loop
+        ball.hits++
+        println(&quot;$name $ball&quot;)
+        delay(300) // wait a bit
+        table.send(ball) // send the ball back
+    }
+}
+//sampleEnd
+</code></pre>
+<p><code>ping</code> 程序首先被启动，所以它是第一个接收<em>Ball</em>的<code>coroutines</code>。尽管 <code>ping</code> 的coroutines在将球送回桌子后立即开始接收，但球还是被 <code>pong</code> coroutines接收了，因为它已经在等待它了。</p>
+<pre><code class="language-text">ping Ball(hits=1)
+pong Ball(hits=2)
+ping Ball(hits=3)
+pong Ball(hits=4)
+</code></pre>
+<p>请注意，由于正在使用的执行器的性质，有时channels可能产生看起来不公平。详见<a href="https://github.com/Kotlin/kotlinx.coroutines/issues/111">issue</a></p>
+<h2 id="定时-channels">定时 channels</h2>
+<p>Ticker通道是一个特殊的会合channel，从这个channel的最后一次消费开始，每隔一定的延迟就会产生<code>Unit</code>。虽然它看起来是无用的，但它是一个有用的构件，可以创建复杂的基于时间的produce pipelines和方便做窗口化和时间相关处理。Ticker通道可以在<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.selects/select.html">select</a>中使用，来执行 <code>on tick</code>动作。</p>
+<p>要创建这样的通道，请使用工厂方法<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/ticker.html">ticker</a>。为了表示不再需要其他元素，使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/cancel.html">ReceiveChannel.cancel</a>方法。</p>
+<p>现在让我们看看它在实践中是如何工作的。</p>
+<pre><code class="language-kotlin">import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+fun main() = runBlocking&lt;Unit&gt; {
+    val tickerChannel = ticker(delayMillis = 100, initialDelayMillis = 0) // create ticker channel
+    var nextElement = withTimeoutOrNull(1) { tickerChannel.receive() }
+    println(&quot;Initial element is available immediately: $nextElement&quot;) // no initial delay
+
+    nextElement = withTimeoutOrNull(50) { tickerChannel.receive() } // all subsequent elements have 100ms delay
+    println(&quot;Next element is not ready in 50 ms: $nextElement&quot;)
+
+    nextElement = withTimeoutOrNull(60) { tickerChannel.receive() }
+    println(&quot;Next element is ready in 100 ms: $nextElement&quot;)
+
+    // Emulate large consumption delays
+    println(&quot;Consumer pauses for 150ms&quot;)
+    delay(150)
+    // Next element is available immediately
+    nextElement = withTimeoutOrNull(1) { tickerChannel.receive() }
+    println(&quot;Next element is available immediately after large consumer delay: $nextElement&quot;)
+    // Note that the pause between `receive` calls is taken into account and next element arrives faster
+    nextElement = withTimeoutOrNull(60) { tickerChannel.receive() } 
+    println(&quot;Next element is ready in 50ms after consumer pause in 150ms: $nextElement&quot;)
+
+    tickerChannel.cancel() // indicate that no more elements are needed
+}
+</code></pre>
+<p>代码输出结果：</p>
+<pre><code class="language-text">Initial element is available immediately: kotlin.Unit
+Next element is not ready in 50 ms: null
+Next element is ready in 100 ms: kotlin.Unit
+Consumer pauses for 150ms
+Next element is available immediately after large consumer delay: kotlin.Unit
+Next element is ready in 50ms after consumer pause in 150ms: kotlin.Unit
+</code></pre>
+<p>请注意，<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/ticker.html">ticker</a>知道消费者可能的暂停，默认情况下，如果发生暂停，会调整下一个生产元素的延迟，试图保持一个固定的生产的速度。</p>
+<p>可以选择指定一个等于<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-ticker-mode/-f-i-x-e-d_-d-e-l-a-y/index.html">TickerMode.FIXED_DELAY</a>的<code>mode</code>参数，以保持元素之间的固定延迟。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://waltcow.github.io/tag/JLYRMSPYa/" class="tag">
+                    kotlin
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://waltcow.github.io/post/kotlin-coroutine-part-5-asynchronous-flow/">
+                  <h3 class="post-title">
+                    Kotlin Coroutine Part 5. Asynchronous Flow
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>
