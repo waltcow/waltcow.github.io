@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" >
 
-<title>标签列表 | waltcow</title>
+<title>Kotlin 如何为class创建静态变量 | waltcow</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
@@ -33,7 +33,11 @@
 </script>
 
 
-    <meta name="description" content="Do have faith in what you&#39;re doing.">
+    <meta name="description" content="大多数编程语言都有这样的概念：类可以有静态成员--每个类只创建一次的字段，并且可以在没有其包含的类的实例的情况下访问。
+
+Kotlin没有类的静态成员，这意味着你不能在Kotlin类中创建静态方法和静态变量。
+幸运的是，Kotlin对象可以..." />
+    <meta name="keywords" content="笔记,kotlin" />
   </head>
   <body>
     <div id="app" class="main">
@@ -107,14 +111,54 @@
 
       <div class="main-container">
         <div class="content-container" data-aos="fade-up">
-          <h2 class="tag-list-title">标签列表</h2>
-          <div class="tags-container">
+          <div class="post-detail">
+            <h2 class="post-title">Kotlin 如何为class创建静态变量</h2>
+            <div class="post-date">2021-08-02</div>
             
-              <a class="tag" href="https://waltcow.github.io/tag/note/">笔记</a>
+            <div class="post-content" v-pre>
+              <p>大多数编程语言都有这样的概念：类可以有静态成员--每个类只创建一次的字段，并且可以在没有其包含的类的实例的情况下访问。</p>
+<!-- more -->
+<p>Kotlin没有类的静态成员，这意味着你不能在Kotlin类中创建静态方法和静态变量。<br>
+幸运的是，Kotlin对象可以处理这个问题。如果你在你的类中声明了一个companion对象，你就可以用与Java/C#中调用静态方法相同的语法来调用其成员，只用类名作为限定符。</p>
+<pre><code class="language-kotlin">class MyClass { 
+  companion object {
+    val info = &quot;This is info&quot;    
+    fun getMoreInfo():String { return &quot;This is more fun&quot; }
+  } 
+}
+MyClass.info             // This is info
+MyClass.getMoreInfo()    // This is more fun
+</code></pre>
+
+            </div>
             
-              <a class="tag" href="https://waltcow.github.io/tag/JLYRMSPYa/">kotlin</a>
+              <div class="tag-container">
+                
+                  <a href="https://waltcow.github.io/tag/note/" class="tag">
+                    笔记
+                  </a>
+                
+                  <a href="https://waltcow.github.io/tag/JLYRMSPYa/" class="tag">
+                    kotlin
+                  </a>
+                
+              </div>
             
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://waltcow.github.io/post/kotlin-coroutine-part-6-channels/">
+                  <h3 class="post-title">
+                    Kotlin Coroutine Part 6. Channels
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
           </div>
+
         </div>
       </div>
     </div>

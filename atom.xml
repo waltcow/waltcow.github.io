@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://waltcow.github.io</id>
     <title>waltcow</title>
-    <updated>2021-08-02T01:28:18.216Z</updated>
+    <updated>2021-08-02T02:23:43.011Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://waltcow.github.io"/>
     <link rel="self" href="https://waltcow.github.io/atom.xml"/>
@@ -10,6 +10,29 @@
     <logo>https://waltcow.github.io/images/avatar.png</logo>
     <icon>https://waltcow.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, waltcow</rights>
+    <entry>
+        <title type="html"><![CDATA[Kotlin 如何为class创建静态变量]]></title>
+        <id>https://waltcow.github.io/post/kotlin-ru-he-wei-class-chuang-jian-jing-tai-bian-liang/</id>
+        <link href="https://waltcow.github.io/post/kotlin-ru-he-wei-class-chuang-jian-jing-tai-bian-liang/">
+        </link>
+        <updated>2021-08-02T02:19:50.000Z</updated>
+        <summary type="html"><![CDATA[<p>大多数编程语言都有这样的概念：类可以有静态成员--每个类只创建一次的字段，并且可以在没有其包含的类的实例的情况下访问。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>大多数编程语言都有这样的概念：类可以有静态成员--每个类只创建一次的字段，并且可以在没有其包含的类的实例的情况下访问。</p>
+<!-- more -->
+<p>Kotlin没有类的静态成员，这意味着你不能在Kotlin类中创建静态方法和静态变量。<br>
+幸运的是，Kotlin对象可以处理这个问题。如果你在你的类中声明了一个companion对象，你就可以用与Java/C#中调用静态方法相同的语法来调用其成员，只用类名作为限定符。</p>
+<pre><code class="language-kotlin">class MyClass { 
+  companion object {
+    val info = &quot;This is info&quot;    
+    fun getMoreInfo():String { return &quot;This is more fun&quot; }
+  } 
+}
+MyClass.info             // This is info
+MyClass.getMoreInfo()    // This is more fun
+</code></pre>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Kotlin Coroutine Part 6. Channels]]></title>
         <id>https://waltcow.github.io/post/kotlin-coroutine-part-6-channels/</id>
