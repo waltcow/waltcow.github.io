@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627632669115">
+<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1627867695330">
 <link rel="stylesheet" href="https://waltcow.github.io/styles/main.css">
 
 
@@ -46,7 +46,7 @@ Channel在概念上与 BlockingQueue非常相似。主要的区别是，它没�
   <div class="top-container" data-aos="fade-right">
     <div class="top-header-container">
       <a class="site-title-container" href="https://waltcow.github.io">
-        <img src="https://waltcow.github.io/images/avatar.png?v=1627632669115" class="site-logo">
+        <img src="https://waltcow.github.io/images/avatar.png?v=1627867695330" class="site-logo">
         <h1 class="site-title">waltcow</h1>
       </a>
       <div class="menu-btn" @click="menuVisible = !menuVisible">
@@ -222,7 +222,7 @@ fun CoroutineScope.square(numbers: ReceiveChannel&lt;Int&gt;): ReceiveChannel&lt
 }
 </code></pre>
 <blockquote>
-<p>所有创建coroutines的函数都被定义为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>的扩展，因此我们可以依靠[structured concurrency](file:/Users/waltcow/Codes/kotlinx.coroutines/docs/topics/composing-suspending-functions.md#structured concurrency-with-async)来确保我们的应用程序中不会全局的coroutine。</p>
+<p>所有创建coroutines的函数都被定义为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>的扩展，因此我们可以依靠<code>structured concurrency</code>来确保我们的应用程序中不会全局的coroutine。</p>
 </blockquote>
 <h2 id="用pipeline处理prime-numbers">用pipeline处理prime numbers</h2>
 <p>让我们用一个例子将pipelines发挥到极致，这个例子是用coroutines的pipeline生成素数。我们从一个无限大的数字sequence开始。</p>

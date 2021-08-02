@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://waltcow.github.io</id>
     <title>waltcow</title>
-    <updated>2021-07-30T08:11:11.745Z</updated>
+    <updated>2021-08-02T01:28:18.216Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://waltcow.github.io"/>
     <link rel="self" href="https://waltcow.github.io/atom.xml"/>
@@ -121,7 +121,7 @@ fun CoroutineScope.square(numbers: ReceiveChannel&lt;Int&gt;): ReceiveChannel&lt
 }
 </code></pre>
 <blockquote>
-<p>所有创建coroutines的函数都被定义为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>的扩展，因此我们可以依靠[structured concurrency](file:/Users/waltcow/Codes/kotlinx.coroutines/docs/topics/composing-suspending-functions.md#structured concurrency-with-async)来确保我们的应用程序中不会全局的coroutine。</p>
+<p>所有创建coroutines的函数都被定义为<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>的扩展，因此我们可以依靠<code>structured concurrency</code>来确保我们的应用程序中不会全局的coroutine。</p>
 </blockquote>
 <h2 id="用pipeline处理prime-numbers">用pipeline处理prime numbers</h2>
 <p>让我们用一个例子将pipelines发挥到极致，这个例子是用coroutines的pipeline生成素数。我们从一个无限大的数字sequence开始。</p>
