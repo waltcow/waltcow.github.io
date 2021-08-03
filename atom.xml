@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://waltcow.github.io</id>
     <title>waltcow</title>
-    <updated>2021-08-03T07:31:32.039Z</updated>
+    <updated>2021-08-03T07:34:14.562Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://waltcow.github.io"/>
     <link rel="self" href="https://waltcow.github.io/atom.xml"/>
@@ -10,6 +10,66 @@
     <logo>https://waltcow.github.io/images/avatar.png</logo>
     <icon>https://waltcow.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, waltcow</rights>
+    <entry>
+        <title type="html"><![CDATA[Kotlin中的List和Array类型的区别]]></title>
+        <id>https://waltcow.github.io/post/kotlin-zhong-de-list-he-array-lei-xing-de-qu-bie/</id>
+        <link href="https://waltcow.github.io/post/kotlin-zhong-de-list-he-array-lei-xing-de-qu-bie/">
+        </link>
+        <updated>2021-08-03T06:33:30.000Z</updated>
+        <summary type="html"><![CDATA[<p><a href="https://kotlinlang.org/docs/reference/basic-types.html#arrays">Arrays</a>和 List（由<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/"><code>List</code></a>及其子类型<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-list/index.html"><code>MutableList</code></a>表示）有许多不同之处，这里列出一些重要的区别。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p><a href="https://kotlinlang.org/docs/reference/basic-types.html#arrays">Arrays</a>和 List（由<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/"><code>List</code></a>及其子类型<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-list/index.html"><code>MutableList</code></a>表示）有许多不同之处，这里列出一些重要的区别。</p>
+<!-- more -->
+<ul>
+<li>
+<p><code>Array&lt;T&gt;</code>是一个有已知实现的类：它是一个连续的固定大小的内存区域，用来存储item（在JVM上，它用<a href="https://docs.oracle.com/javase/tutorial/java/nutsandbolts/arrays.html">Java array</a>表示）<code>List&lt;T&gt;</code>和<code>MutableList&lt;T&gt;</code>是有着不同实现方式的interface。比如像<code>ArrayList&lt;T&gt;</code>,  <code>LinkedList&lt;T&gt;</code>等。List的内存表示和操作逻辑是在具体实现中定义的，例如，<code>LinkedList&lt;T&gt;</code>中的索引是通过链表实现的，有着O(n)时间复杂度，而<code>ArrayList&lt;T&gt;</code>将其元素存储在一个动态分配的数组中。</p>
+<pre><code class="language-kotlin">val list1: List&lt;Int&gt; = LinkedList&lt;Int&gt;()
+val list2: List&lt;Int&gt; = ArrayList&lt;Int&gt;()
+</code></pre>
+</li>
+<li>
+<p><code>Array&lt;T&gt;</code>是可变的（它可以通过引用来改变），但<code>List&lt;T&gt;</code>没有修改方法（它要么是只读的<a href="https://stackoverflow.com/questions/34770493/kotlin-instantiate-immutable-list/34770659#34770659">MutableList</a>，要么是<a href="https://stackoverflow.com/questions/7713274/java-immutable-collections">ImmutableList</a>）。</p>
+<pre><code class="language-kotlin">val a = arrayOf(1, 2, 3)
+a[0] = a[1] // OK
+
+val l = listOf(1, 2, 3)
+l[0] = l[1] // doesn't compile
+
+val m = mutableListOf(1, 2, 3)
+m[0] = m[1] // OK
+</code></pre>
+</li>
+<li>
+<p>Arrays有固定的大小，不能扩大或缩小去改变它的属性。至于List，<code>MutableList&lt;T&gt;</code>有<code>add</code>和<code>remove</code>函数，所以它可以增加和减少其大小。</p>
+<pre><code class="language-kotlin">val a = arrayOf(1, 2, 3)
+println(a.size) // will always be 3 for this array
+
+val l = mutableListOf(1, 2, 3)
+l.add(4)
+println(l.size) // 4
+</code></pre>
+</li>
+<li>
+<p><code>Array&lt;T&gt;</code> 是限定类型为 <a href="(https://kotlinlang.org/docs/reference/generics.html#variance)">T</a> (<code>Array&lt;Int&gt;</code> 不同于 <code>Array&lt;Number&gt;</code>),  MutableList<T>也一样，但是 <code>List&lt;T&gt;</code> 不限制的 (<code>List&lt;Int&gt;</code> 和 <code>List&lt;Number&gt;</code>都可以放).</p>
+<pre><code class="language-kotlin">val a: Array&lt;Number&gt; = Array&lt;Int&gt;(0) { 0 } // won't compile
+val l: List&lt;Number&gt; = listOf(1, 2, 3) // OK
+</code></pre>
+</li>
+<li>
+<p>Array针对原始类型进行了优化：有单独的 <code>IntArray</code>、<code>DoubleArray</code>、<code>CharArray</code>等，它们被映射到Java的基本的array（<code>int[]</code>、<code>double[]</code>、<code>char[]</code>），而不是<a href="https://docs.oracle.com/javase/tutorial/java/data/autoboxing.html">boxed</a>的（<code>Array&lt;Int&gt;</code>被映射到Java的<code>Integer[]</code>）。一般来说，List没有针对原始类型进行实现优化的，尽管一些库（JDK之外）提供了优化的List。</p>
+</li>
+<li>
+<p><code>List&lt;T&gt;</code>和<code>MutableList&lt;T&gt;</code>是<a href="https://kotlinlang.org/docs/reference/java-interop.html#mapped-types">映射类型</a>，在Java跨语言操作性中具有特殊的行为（Java的<code>List&lt;T&gt;</code>从Kotlin看来是<code>List&lt;T&gt;</code>或者<code>MutableList&lt;T&gt;</code>）。数组也是被映射的，但它们有Java互操作性的<a href="https://kotlinlang.org/docs/reference/java-interop.html#java-arrays">其他规则</a>。</p>
+</li>
+<li>
+<p>某些Array类型可用于<a href="https://kotlinlang.org/docs/reference/annotations.html#annotations">annotations</a>（原始数组、<code>Array&lt;String&gt;</code>和带有<code>enum类</code>条目的数组），并且有这特殊的<a href="https://kotlinlang.org/docs/reference/whatsnew12.html#array-literals-in-annotations">注释的数组字面语法</a>。List和其他集合不能在<em>annotation</em>中使用。</p>
+</li>
+<li>
+<p>至于使用方法，最佳实践是在任何地方都使用List而不是Array，除了代码的对性能关键部分有要求，道理与<a href="http://www.javapractices.com/topic/TopicAction.do?Id=39">Java</a>相同。</p>
+</li>
+</ul>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Kotlin 如何为class创建静态变量]]></title>
         <id>https://waltcow.github.io/post/kotlin-ru-he-wei-class-chuang-jian-jing-tai-bian-liang/</id>
