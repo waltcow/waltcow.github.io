@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title> Kotlin — Multiplatform MVI Part 2. Store | waltcow</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1628148292772">
+<link rel="stylesheet" href="https://waltcow.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.1.0/build/styles/atom-one-dark.min.css">
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.1.0/build/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZYD6WR6G0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0ZYD6WR6G0');
+</script>
+
+
+    <meta name="description" content="
+Store
+Store是放业务逻辑的地方。在MVIKotlin由mvikotlin模块中的Store接口表示。你可以查看它的定义这里。 它有以下特点。
+它有以下特点。
+
+有三个通用参数：输入Intent，输出State和Label。
+命名..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://waltcow.github.io">
+        <img src="https://waltcow.github.io/images/avatar.png?v=1628148292772" class="site-logo">
+        <h1 class="site-title">waltcow</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://github.com/waltcow" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      Do have faith in what you're doing.
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/waltcow" target="_blank">waltcow</a> | <a class="rss" href="https://waltcow.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title"> Kotlin — Multiplatform MVI Part 2. Store</h2>
+            <div class="post-date">2021-08-05</div>
+            
+            <div class="post-content" v-pre>
+              <!-- more -->
+<h2 id="store">Store</h2>
+<p><code>Store</code>是放业务逻辑的地方。在MVIKotlin由<code>mvikotlin</code>模块中的<code>Store</code>接口表示。你可以查看它的定义<a href="https://github.com/arkivanov/MVIKotlin/blob/master/mvikotlin/src/commonMain/kotlin/com/arkivanov/mvikotlin/core/store/Store.kt">这里</a>。 它有以下特点。</p>
+<p>它有以下特点。</p>
+<ul>
+<li>有三个通用参数：输入<code>Intent</code>，输出<code>State</code>和<code>Label</code>。</li>
+<li>命名为<code>state</code>的属性返回<code>Store</code>下面的<code>State</code>。</li>
+<li>可以在任何线程上进行创建（实例化）。</li>
+<li>它的<code>states(Observer&lt;State&gt;)</code>方法被用来订阅<code>State</code>更新。当订阅时，它发出当前<code>Store</code>的<code>State</code>。可以在任何线程上调用或订阅，<code>States</code>总是在主线程上发出的。</li>
+<li><code>labels(Observer&lt;Label&gt;)</code>方法用于订阅<code>Label</code>。可以在任何线程上调用或订阅，<code>Label</code>总是在主线程上发出。</li>
+<li><code>accept(Intent)</code>方法向<code>Store</code>提供<code>Intents</code>，只在主线程上调用。</li>
+<li><code>init()</code>方法初始化<code>Store</code>并触发<code>Bootstrapper</code>，只在主线程上调用。</li>
+<li><code>dispose()</code>方法销毁<code>Store</code>并取消其所有异步操作，只在主线程上调用。</li>
+</ul>
+<blockquote>
+<p>通常你不需要直接使用<code>states(Observer)</code>或<code>labels(Observer)</code>方法。<code>Reaktive</code>和<code>kotlinx.coroutines</code>库有可用的扩展（更多信息见<a href="https://github.com/arkivanov/MVIKotlin/blob/master/docs/binding_and_lifecycle.md">Binding and Lifecycle</a>)。</p>
+</blockquote>
+<p>每个 <code>Store</code>都有最多三个组件。<code>Bootstrapper</code>，<code>Executor</code>和 <code>Reducer</code>。</p>
+<p>下面是它们的连接图。</p>
+<figure data-type="image" tabindex="1"><img src="https://i.loli.net/2021/08/05/94nCBjq8TsxJiRN.jpg" alt="store" loading="lazy"></figure>
+<h3 id="bootstrapper">Bootstrapper</h3>
+<p>这个<code>Store</code>组件的启动, 如果传递给 <code>StoreFactory</code>，它将在 <code>Store</code>初始化过程中的某个时刻被调用。Bootstrapper 产生 <code>Actions</code>，由 <code>Executor</code>处理。Bootstrapper 总是在主线程上执行，<code>Actions</code>只在主线程上派发。然而，当 <code>Bootstrapper</code>被执行时，你可以自由切换线程。</p>
+<blockquote>
+<p>⚠️ 请注意，&quot;Bootstrappers &quot;是有状态的，所以不能是 object</p>
+</blockquote>
+<h3 id="executor">Executor</h3>
+<p>这里是业务逻辑的地方，所有的异步操作也发生在这里。<code>Executor</code>接受并处理来自外部世界的<code>Intents</code>和来自<code>Bootstrapper</code>的<code>Actions</code>。<code>Executor</code>有两个输出。<code>Results</code> 和<code>Label</code>。<code>Result</code> 被传递给 <code>Reducer</code>，<code>Label</code>被直接排放到外部世界。执行者 可以持续访问 Store的当前 State，在 <code>Result</code>被发送后，执行者就可以看到新的 State。执行者总是在主线程上执行，<code>Result</code> 和<code>Label</code>也必须只在主线程上调度。然而，你可以在处理<code>Action</code>或<code>Intents</code>时自由切换线程。</p>
+<blockquote>
+<p>⚠️ 请注意，&quot;Executors &quot;是有状态的，所以不能是 object</p>
+</blockquote>
+<h3 id="reducer">Reducer</h3>
+<p>这个组件基本上是一个函数，接受来自<code>Executor</code>的 <code>Result</code>和 <code>Store</code> 的当前 <code>State</code>，并返回一个新的 <code>State</code>。<code>Executor</code>产生的每一个<code>Result</code> 都会调用 <code>Reducer</code>，一旦 <code>Reducer</code>调用返回，新的 <code>State</code> 就会被应用并发射出来。<code>Reducer</code> 总是在主线程上调用。</p>
+<h2 id="creating-a-store">Creating a Store</h2>
+<p>通常情况下，你不需要直接实现<code>Store</code>接口。相反，你应该使用<a href="https://github.com/arkivanov/MVIKotlin/blob/master/mvikotlin/src/commonMain/kotlin/com/arkivanov/mvikotlin/core/store/StoreFactory.kt">StoreFactory</a>，它将为你创建一个<code>Store</code>。你所需要做的就是提供最多三个组件（<code>Bootstrapper</code>、<code>Executor</code> 和 <code>Reducer</code>）和一个初始的 <code>State</code>。<code>StoreFactory</code>用于抽象出一个<code>Store</code>的实现。我们可以根据情况使用不同的Factory，并根据需要组合它们。</p>
+<p>MVIKotlin提供了许多Factory。</p>
+<ul>
+<li><a href="https://github.com/arkivanov/MVIKotlin/blob/master/mvikotlin-main/src/commonMain/kotlin/com/arkivanov/mvikotlin/main/store/DefaultStoreFactory.kt">DefaultStoreFactory</a>创建了一个<code>Store</code>的默认实现，由<code>mvikotlin-main</code>模块提供。</li>
+<li><a href="https://github.com/arkivanov/MVIKotlin/blob/master/mvikotlin-logging/src/commonMain/kotlin/com/arkivanov/mvikotlin/logging/store/LoggingStoreFactory.kt">LoggingStoreFactory</a>封装了另一个<code>StoreFactory</code>并添加了日志，它由<code>mvikotlin-logging</code>模块提供。</li>
+<li><a href="https://github.com/arkivanov/MVIKotlin/blob/master/mvikotlin-timetravel/src/commonMain/kotlin/com/arkivanov/mvikotlin/timetravel/store/TimeTravelStoreFactory.kt">TimeTravelStoreFactory</a>由<code>mvikotlin-timetravel</code>模块提供，它创建一个具有时间旅行功能的<code>Store</code>。</li>
+</ul>
+<h3 id="initializing-a-store">Initializing a Store</h3>
+<p>默认情况下，<code>Stores</code>是由<code>StoreFactory</code>自动初始化的。你可以通过向<code>StoreFactory.create(...)</code>函数传递<code>isAutoInit=false</code>参数来选择取消自动初始化。也可以通过在构造函数中传递<code>isAutoInitByDefault=false</code>参数来禁用整个<code>DefaultStoreFactory</code>的自动初始化功能。</p>
+<blockquote>
+<p>⚠️ 当自动初始化被禁用时，你应该手动调用<code>Store.init()</code>方法。</p>
+</blockquote>
+<h3 id="simplest-example">Simplest example</h3>
+<p>让我们从一个非常基本的例子开始。我们将创建一个简单的计数器<code>Store</code>，它的值会递增和递减。</p>
+<p>我们应做的第一件事是定义一个接口。它将是这样的。</p>
+<pre><code class="language-kotlin">internal interface CalculatorStore : Store&lt;Intent, State, Nothing&gt; {
+
+    sealed class Intent {
+        object Increment : Intent()
+        object Decrement : Intent()
+    }
+
+    data class State(
+        val value: Long = 0L
+    )
+}
+</code></pre>
+<p><code>CalculatorStore</code>接口本身可以被标记为<code>internal</code>，所以它将是一个模块的实现细节。另外<code>CalculatorStore</code>有两个<code>Intents</code>（<code>Increment</code>和<code>Decrement</code>），<code>State</code>只有一个<code>Long</code>值。这就是我们的 <code>Store</code>的公共API。</p>
+<p>现在是实现的时候了。</p>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    fun create(): CalculatorStore =
+        object : CalculatorStore, Store&lt;Intent, State, Nothing&gt; by storeFactory.create(
+            name = &quot;CounterStore&quot;,
+            initialState = State(),
+            reducer = ReducerImpl
+        ) {
+        }
+
+    private object ReducerImpl : Reducer&lt;State, Intent&gt; {
+        override fun State.reduce(result: Intent): State =
+            when (result) {
+                is Intent.Increment -&gt; copy(value = value + 1L)
+                is Intent.Decrement -&gt; copy(value = value - 1L)
+            }
+    }
+}
+</code></pre>
+<p>我们唯一需要的组件是 <code>Reducer</code>。它接受 <code>Intents</code>并通过增加或减少其值来修改 <code>State</code>。工厂函数<code>create()</code>使用<code>StoreFactory</code>，它被作为一个依赖项传递。</p>
+<h3 id="adding-executor">Adding Executor</h3>
+<p>目前我们的<code>CalculatorStore</code>只能增加和减少它的值。但是如果我们需要计算什么呢？比方说，我们想计算一个从1到N的数字之和，我们需要一个额外的<code>Intent</code>。</p>
+<pre><code class="language-kotlin">internal interface CalculatorStore : Store&lt;Intent, State, Nothing&gt; {
+
+    sealed class Intent {
+        object Increment : Intent()
+        object Decrement : Intent()
+        data class Sum(val n: Int): Intent() // &lt;-- Add this line
+    }
+
+    data class State(
+        val value: Long = 0L
+    )
+}
+</code></pre>
+<p>我们想<code>CalculatorStore</code>将接受<code>Intent.Sum(N)</code>，计算从1到N的数字之和，然后用结果更新<code>State</code>。但是计算可能需要一些时间，所以应该在一个后台线程中进行。为此，我们需要<code>Executor</code></p>
+<p>为了使我们能够与 <code>Reducer</code> 通信，我们将需要 <code>Results</code>。</p>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    private sealed class Result {
+        class Value(val value: Long) : Result()
+    }
+}
+</code></pre>
+<p>我们将需要一个新的<code>Reducer</code>，因为现在它将接受<code>Results</code>而不是<code>Intents</code>。</p>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    private sealed class Result {
+        class Value(val value: Long) : Result()
+    }
+
+    private object ReducerImpl : Reducer&lt;State, Result&gt; {
+        override fun State.reduce(result: Result): State =
+            when (result) {
+                is Result.Value -&gt; copy(value = result.value)
+            }
+    }
+}
+</code></pre>
+<p>只有一个可能的<code>Result.Value(Long)</code>，它只是替换了<code>State</code>中的任何值。</p>
+<p>现在是 <code>Executor</code>的时候了。如果你有兴趣，你可以找到这个接口<a href="https://github.com/arkivanov/MVIKotlin/blob/master/mvikotlin/src/commonMain/kotlin/com/arkivanov/mvikotlin/core/store/Executor.kt">这里</a>。幸运的是，我们不需要实现这整个接口。相反，我们可以扩展一个基础实现。</p>
+<p><code>MVIKotlin</code>提供了两个基础 <code>Executor</code>。</p>
+<ul>
+<li>
+<p><a href="https://github.com/arkivanov/MVIKotlin/blob/master/mvikotlin-extensions-reaktive/src/commonMain/kotlin/com/arkivanov/mvikotlin/extensions/reaktive/ReaktiveExecutor.kt">ReaktiveExecutor</a> - 实现基于<a href="https://github.com/badoo/Reaktive">Reaktive</a>库，由<code>mvikotlin-extensions-reaktive</code>模块提供。</p>
+</li>
+<li>
+<p><a href="https://github.com/arkivanov/MVIKotlin/blob/master/mvikotlin-extensions-coroutines/src/commonMain/kotlin/com/arkivanov/mvikotlin/extensions/coroutines/CoroutineExecutor.kt">CoroutineExecutor</a> - 实现基于<a href="https://github.com/Kotlin/kotlinx.coroutines">Coroutines</a>库，由<code>mvikotlin-extensions-coroutines</code>模块提供。</p>
+</li>
+</ul>
+<h4 id="reaktiveexecutor">ReaktiveExecutor</h4>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    // ...
+
+    private class ExecutorImpl : ReaktiveExecutor&lt;Intent, Nothing, State, Result, Nothing&gt;() {
+        override fun executeIntent(intent: Intent, getState: () -&gt; State) =
+            when (intent) {
+                is Intent.Increment -&gt; dispatch(Result.Value(getState().value + 1))
+                is Intent.Decrement -&gt; dispatch(Result.Value(getState().value - 1))
+                is Intent.Sum -&gt; sum(intent.n)
+            }
+
+        private fun sum(n: Int) {
+            singleFromFunction { (1L..n.toLong()).sum() }
+                .subscribeOn(computationScheduler)
+                .map(Result::Value)
+                .observeOn(mainScheduler)
+                .subscribeScoped(onSuccess = ::dispatch)
+        }
+    }
+
+    // ...
+}
+</code></pre>
+<p>所以我们扩展了<code>ReaktiveExecutor</code>类，并实现了<code>executeIntent</code>方法。这个方法给我们一个<code>Intent</code>和一个当前<code>State</code>的供应商。对于<code>Intent.Increment</code>和<code>Intent.Decrement</code>，我们只需使用<code>dispatch</code>方法发送带有新值的<code>Result</code>。但是对于<code>Intent.Sum</code>我们使用<code>Reaktive</code>进行多线程计算。我们在<code>computationScheduler</code>上计算总和，然后切换到<code>mainScheduler</code>上，<code>dispatch</code>最新的<code>Result</code>。</p>
+<blockquote>
+<p>⚠️ <code>ReaktiveExecutor</code>实现了Reaktive的<a href="https://github.com/badoo/Reaktive#subscription-management-with-disposablescope">DisposableScope</a>，提供了一堆额外的扩展函数。我们使用了其中的一个函数 - <code>subscribeScoped</code>。这确保了当<code>Store</code>（以及<code>Executor</code>）被销毁时，订阅也被销毁了。</p>
+</blockquote>
+<h4 id="coroutineexecutor">CoroutineExecutor</h4>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    // ...
+
+    private class ExecutorImpl : CoroutineExecutor&lt;Intent, Nothing, State, Result, Nothing&gt;() {
+        override fun executeIntent(intent: Intent, getState: () -&gt; State) =
+            when (intent) {
+                is Intent.Increment -&gt; dispatch(Result.Value(getState().value + 1))
+                is Intent.Decrement -&gt; dispatch(Result.Value(getState().value - 1))
+                is Intent.Sum -&gt; sum(intent.n)
+            }
+
+        private fun sum(n: Int) {
+            scope.launch {
+                val sum = withContext(Dispatchers.Default) { (1L..n.toLong()).sum() }
+                dispatch(Result.Value(sum))
+            }
+        }
+    }
+
+    // ...
+}
+</code></pre>
+<p>这里我们扩展了<code>CoroutineExecutor</code>类。和是在<code>Default</code>调度器上计算的，<code>Result</code>是在<code>Main</code>线程上调度的。</p>
+<blockquote>
+<p>⚠️ <code>CoroutineExecutor</code>提供名为<code>scope</code>的<code>CoroutineScope</code>属性，可用于运行异步任务。该范围默认使用<code>Dispatchers.Main</code>调度器，可以通过向<code>CoroutineExecutor</code>构造函数传递不同的<code>CoroutineContext</code>来覆盖。当<code>Store</code>被处置时，该作用域会自动取消。</p>
+</blockquote>
+<h4 id="publishing-labels">Publishing Labels</h4>
+<p><code>Labels</code> 是由 <code>Store</code> 产生的一次性事件，或者更具体地说，由 <code>Executor</code> &quot;产生。一旦发布(emitted)，它们就会传递给所有当前的订阅者，并且不会被缓存。<code>Executor</code> 有专门的方法：<code>publish(Label)</code>。</p>
+<h3 id="creating-the-store">Creating the Store</h3>
+<p>我们还需要将我们的 <code>Executor</code>的工厂函数传递给 <code>StoreFactory</code>。</p>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    fun create(): CalculatorStore =
+        object : CalculatorStore, Store&lt;Intent, State, Nothing&gt; by storeFactory.create(
+            name = &quot;CounterStore&quot;,
+            initialState = State(),
+            executorFactory = ::ExecutorImpl, // &lt;-- Pass Executor factory
+            reducer = ReducerImpl
+        ) {
+        }
+
+    // ...
+}
+</code></pre>
+<p>为什么是factory而不是<code>Executor</code>的一个实例？因为有时间旅行的功能。当调试时间旅行事件时，它在必要时创建单独的<code>Executor</code>实例，并伪造它们的<code>State</code>。</p>
+<h3 id="adding-bootstrapper">Adding Bootstrapper</h3>
+<p>当我们创建一个新的 <code>Store</code> 实例时，它将停留在一个初始的 <code>State</code>，在你提供一个 <code>Intent</code>之前什么都不做。但有时我们需要引导（或启动）一个<code>Store</code>，所以它一旦创建就会开始做一些事情。例如，它可以开始监听服务器的事件或从数据库中加载一些东西。这就是为什么我们需要 <code>Bootstrapper</code>。正如开头提到的，<code>Bootstrapper</code>产生 <code>Actions</code>，由 <code>Executor</code> 以与 <code>Intents</code> 相同的方式处理。</p>
+<p>我们的 <code>CalculatorStore</code>能够计算从1到N的数字之和。我们使用<code>Bootstrapper</code>来计算<code>sum(100)</code>当<code>CalculatorStore</code>被创建时。我们的 <code>Executor</code> 已经具备了计算总和的所有条件，所以我们只需向 <code>Executor</code> 发送一个触发的 <code>Action</code>，和 <code>Intent.Sum(N)</code>一样。</p>
+<p>让我们首先添加一个<code>Action</code></p>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    // ...
+
+    private sealed class Action {
+        class Sum(val n: Int): Action()
+    }
+
+    // ...
+}
+</code></pre>
+<p>现在是时候处理 <code>ReaktiveExecutor</code> 中的 <code>Action</code> 了。</p>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    // ...
+
+    private class ExecutorImpl : ReaktiveExecutor&lt;Intent, Action, State, Result, Nothing&gt;() {
+        override fun executeAction(action: Action, getState: () -&gt; State) =
+            when (action) {
+                is Action.Sum -&gt; sum(action.n)
+            }
+
+        // ...
+    }
+
+    // ...
+}
+</code></pre>
+<p>对<code>CoroutineExecutor</code>也是如此。</p>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    // ...
+
+    private class ExecutorImpl : CoroutineExecutor&lt;Intent, Action, State, Result, Nothing&gt;() {
+        override fun executeAction(action: Action, getState: () -&gt; State) =
+            when (action) {
+                is Action.Sum -&gt; sum(action.n)
+            }
+
+        // ...
+    }
+
+    // ...
+}
+</code></pre>
+<p>我们唯一缺少的是需要触发 <code>Action</code>的方式。我们需要向 <code>StoreFactory</code> 传递一个 <code>Bootstrapper</code>。对于这样一个简单的案例，我们可以使用<a href="https://github.com/arkivanov/MVIKotlin/blob/master/mvikotlin/src/commonMain/kotlin/com/arkivanov/mvikotlin/core/store/SimpleBootstrapper.kt">SimpleBootstrapper</a>。</p>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    fun create(): CalculatorStore =
+        object : CalculatorStore, Store&lt;Intent, State, Nothing&gt; by storeFactory.create(
+            name = &quot;CounterStore&quot;,
+            initialState = State(),
+            bootstrapper = SimpleBootstrapper(Action.Sum(100)), // &lt;-- Add this line
+            executorFactory = ::ExecutorImpl,
+            reducer = ReducerImpl
+        ) {
+        }
+
+    // ...
+}
+</code></pre>
+<p><code>SimpleBootstrapper</code>只是dispatch提供的<code>Actions</code>。但有时需要更多，例如做一些后台工作。</p>
+<p>使用<code>ReaktiveBootstrapper</code>，来自<code>mvikotlin-extensions-reaktive</code>模块。</p>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    fun create(): CalculatorStore =
+        object : CalculatorStore, Store&lt;Intent, State, Nothing&gt; by storeFactory.create(
+            name = &quot;CounterStore&quot;,
+            initialState = State(),
+            bootstrapper = BootstrapperImpl, // &lt;-- Pass BootstrapperImpl to the StoreFactory
+            executorFactory = ::ExecutorImpl,
+            reducer = ReducerImpl
+        ) {
+        }
+
+    private sealed class Action {
+        class SetValue(val value: Long): Action() // &lt;-- Use another Action
+    }
+
+    // ...
+
+    private class BootstrapperImpl : ReaktiveBootstrapper&lt;Action&gt;() {
+        override fun invoke() {
+            singleFromFunction { (1L..1000000.toLong()).sum() }
+                .subscribeOn(computationScheduler)
+                .map(Action::SetValue)
+                .observeOn(mainScheduler)
+                .subscribeScoped(onSuccess = ::dispatch)
+        }
+    }
+
+    private class ExecutorImpl : ReaktiveExecutor&lt;Intent, Action, State, Result, Nothing&gt;() {
+        override fun executeAction(action: Action, getState: () -&gt; State) =
+            when (action) {
+                is Action.SetValue -&gt; dispatch(Result.Value(action.value)) // &lt;-- Handle the Action
+            }
+
+        // ...
+    }
+
+    // ...
+}
+</code></pre>
+<blockquote>
+<p>⚠️ <code>ReaktiveBootstrapper</code>也实现了<code>DisposableScope</code>，与<code>ReaktiveExecutor</code>相同。所以我们也可以在这里使用<code>subscribeScoped</code>的扩展函数。</p>
+</blockquote>
+<p>使用来自<code>mvikotlin-extensions-coroutines</code>模块的<code>CoroutineBootstrapper</code>。</p>
+<pre><code class="language-kotlin">internal class CalculatorStoreFactory(private val storeFactory: StoreFactory) {
+
+    fun create(): CalculatorStore =
+        object : CalculatorStore, Store&lt;Intent, State, Nothing&gt; by storeFactory.create(
+            name = &quot;CounterStore&quot;,
+            initialState = State(),
+            bootstrapper = BootstrapperImpl,
+            executorFactory = ::ExecutorImpl,
+            reducer = ReducerImpl
+        ) {
+        }
+
+    private sealed class Action {
+        class SetValue(val value: Long): Action()
+    }
+
+    // ...
+
+    private class BootstrapperImpl : CoroutineBootstrapper&lt;Action&gt;() {
+        override fun invoke() {
+            scope.launch {
+                val sum = withContext(Dispatchers.Default) { (1L..1000000.toLong()).sum() }
+                dispatch(Action.SetValue(sum))
+            }
+        }
+    }
+
+    private class ExecutorImpl : CoroutineExecutor&lt;Intent, Action, State, Result, Nothing&gt;() {
+        override fun executeAction(action: Action, getState: () -&gt; State) =
+            when (action) {
+                is Action.SetValue -&gt; dispatch(Result.Value(action.value))
+            }
+
+        // ...
+    }
+
+    // ...
+}
+</code></pre>
+<blockquote>
+<p>⚠️ <code>CoroutineBootstrapper</code>也提供<code>CoroutineScope</code>属性<code>scope</code>，与<code>CoroutineExecutor</code>相同。所以我们可以用它来运行异步任务。</p>
+</blockquote>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://waltcow.github.io/post/kotlin-multiplatform-mvi-part-1-overview/">
+                  <h3 class="post-title">
+                     Kotlin — Multiplatform MVI Part 1. Overview
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>
