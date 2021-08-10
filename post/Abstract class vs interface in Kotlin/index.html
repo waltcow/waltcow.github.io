@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Kotlin下Abstract class 和 Interface 的区别是什么？ | waltcow</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://waltcow.github.io/favicon.ico?v=1628560380815">
+<link rel="stylesheet" href="https://waltcow.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.1.0/build/styles/atom-one-dark.min.css">
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.1.0/build/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0ZYD6WR6G0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0ZYD6WR6G0');
+</script>
+
+
+    <meta name="description" content="Kotlin下Abstract class 和 Interface 的区别是什么？
+
+这个问题估计是所有招聘流程中最常见的问题了，比较常见的回答如下
+
+Interface 不是拥有State
+Class 可以拥有actual Functio..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://waltcow.github.io">
+        <img src="https://waltcow.github.io/images/avatar.png?v=1628560380815" class="site-logo">
+        <h1 class="site-title">waltcow</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://github.com/waltcow" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      Do have faith in what you're doing.
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/waltcow" target="_blank">waltcow</a> | <a class="rss" href="https://waltcow.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Kotlin下Abstract class 和 Interface 的区别是什么？</h2>
+            <div class="post-date">2021-08-10</div>
+            
+            <div class="post-content" v-pre>
+              <p>Kotlin下Abstract class 和 Interface 的区别是什么？</p>
+<!-- more -->
+<p>这个问题估计是所有招聘流程中最常见的问题了，比较常见的回答如下</p>
+<ul>
+<li>Interface 不是拥有State</li>
+<li>Class 可以拥有actual Function</li>
+<li>一个Class来可以实现多个的Interface</li>
+</ul>
+<p>下面我将说下以上的回答不完全正确的，Interface 可以拥有Properties并且可以拥有State，但不是用Field来实现. Interface可以拥有Function且带有函数体而已它们不是用final声明的。Abstract Class 和Interface的最主要区别是：</p>
+<ul>
+<li>Interfaces 不能有 fields</li>
+<li>我们只能extend 单一的class，而允许实现多个interface</li>
+<li>Class 拥有构造函数</li>
+</ul>
+<p>下面展开去讨论下：</p>
+<h2 id="interfaces-can-have-functions">Interfaces can have functions</h2>
+<pre><code class="language-kotlin">interface Animal {
+    fun makeVoice() {
+        print(&quot;&lt;Animal voice&gt;&quot;)
+    }
+}
+
+class Fox: Animal
+
+fun main() {
+    val fox = Fox()
+    fox.makeVoice() // &lt;Animal voice&gt;
+}
+</code></pre>
+<p>在Interface的body内可以使用<em>this</em>去引用实现的<em>class</em></p>
+<p>In these bodies, we can use the reference to the class using <code>this</code>:</p>
+<pre><code class="language-kotlin">interface Animal {
+    fun makeVoice() {
+        print(&quot;&lt;${this::class.simpleName} voice&gt;&quot;)
+    }
+}
+
+class Fox: Animal
+
+fun main() {
+    val fox = Fox()
+    fox.makeVoice() // &lt;Fox voice&gt;
+}
+</code></pre>
+<p>Interface 内声明的函数不能为final且一定是需要被<em>override</em>的。这是Interface 和Abstract Class的重要区别，Abstract class 内可以把函数声明为final，当需要override函数时，可以通过super来调用默认的函数。</p>
+<pre><code class="language-kotlin">interface Animal {
+    fun makeVoice() {
+        print(&quot;&lt;${this::class.simpleName} voice&gt;&quot;)
+    }
+}
+
+class Fox: Animal {
+    override fun makeVoice() {
+        super.makeVoice()
+        print(&quot; (I prefer to stay quiet)&quot;)
+    }
+}
+
+fun main() {
+    val fox = Fox()
+    fox.makeVoice() // &lt;Fox voice&gt; (I prefer to stay quiet)
+}
+
+</code></pre>
+<h2 id="interfaces-can-have-properties">Interfaces can have properties</h2>
+<p>Kotlin中Property代表的是对<code>val</code> 的getter 和setter的抽象，默认的情况下，它们class的域下有对应的field 在使用着，这就是为啥下面两者是等价的</p>
+<pre><code class="language-kotlin">class User {
+    var name: String = &quot;&quot;
+}
+</code></pre>
+<pre><code class="language-kotlin">
+public final class User {
+   @NotNull
+   private String name = &quot;&quot;;
+
+   @NotNull
+   public final String getName() {
+      return this.name;
+   }
+
+   public final void setName(@NotNull String var1) {
+      Intrinsics.checkParameterIsNotNull(var1, &quot;&lt;set-?&gt;&quot;);
+      this.name = var1;
+   }
+}
+</code></pre>
+<p>即使 <em>properties</em> 不需要在对应的域下有着对应的filed，在下面中例子中，<code>fullName</code>仅是一个每当需要获取该属性的getter</p>
+<pre><code class="language-kotlin">class User {
+    var name: String = &quot;&quot;
+    var surname: String = &quot;&quot;
+    val fullName: String
+        get() = &quot;$name $surname&quot;
+}
+</code></pre>
+<p>Properties 它仅是一个访问器而已（getters 和setter），它们可以通过Interface来等价表达，只是它们没有明确的value 而已。</p>
+<pre><code class="language-kotlin">
+interface Animal {
+    val name: String
+}
+
+class Fox: Animal {
+    override val name: String = &quot;&quot;
+}
+</code></pre>
+<p>properties 也可以有默认的实现</p>
+<pre><code class="language-kotlin">interface Animal {
+    val name: String
+    val type: String
+    
+    val fullName: String
+        get() = &quot;$name of type $type&quot;
+}
+
+class Fox: Animal {
+    override val type: String = &quot;Tibetan sand fox&quot;
+    override val name: String = &quot;Sox&quot;
+}
+
+fun main() {
+    val fox = Fox()
+    print(fox.fullName) // Sox of type Tibetan sand fox
+}
+</code></pre>
+<h2 id="interfaces-formally-can-have-state">Interfaces formally can have state</h2>
+<p>这个实现有一点Hack，这是不好的做法，但我只想说明，在Interfaces中保持State是可能的。我们只需要使用默认体来存储它。我们可以把它存储在哪里呢？有不少选择，但没有一个是好的。它们都会被管理得很糟糕，而且不能被垃圾收集器正确回收。</p>
+<pre><code class="language-kotlin">interface Animal {
+    var name: String
+        get() = names[this] ?: &quot;Default name&quot;
+        set(value) { names[this] = value }
+
+    var type: String
+        get() = types[this] ?: &quot;Default type&quot;
+        set(value) { types[this] = value }
+
+    val fullName: String
+        get() = &quot;$name of type $type&quot;
+
+    companion object {
+         private val names = mutableMapOf&lt;Any, String&gt;()
+         private val types = mutableMapOf&lt;Any, String&gt;()
+    }
+}
+
+class Fox: Animal
+class Dog: Animal
+
+fun main() {
+    val fox = Fox()
+    fox.name = &quot;Sox&quot;
+    fox.type = &quot;Tibetan sand fox&quot;
+
+    val dog = Dog()
+    dog.name = &quot;Billy&quot;
+    dog.type = &quot;Dog&quot;
+
+    print(fox.fullName) // Sox of type Tibetan sand fox
+    print(dog.fullName) // Billy of type Dog
+}
+</code></pre>
+<p>请注意，这种在内存中存储的方式与我们使用字段时不同。</p>
+<ul>
+<li>
+<p>它不能被垃圾收集器正确管理。</p>
+</li>
+<li>
+<p><code>Properties</code>与相同的class关联，而不是与相同的class相关（如果我们使用引用，这一点可以得到改善）</p>
+</li>
+</ul>
+<p>这个解决方案是反直觉的，不应该在实际项目中使用，除非你真的很清楚你在做什么，有什么后果 。</p>
+<h2 id="differences">Differences</h2>
+<p>Abstract classes 可以拥有Interface的一切能力，除此以外，它可以使用fields 和 constructor，因此我们可以在abstract class 内使用state。</p>
+<pre><code class="language-kotlin">abstract class Animal {
+    var name: String = &quot;Default name&quot;
+    var type: String = &quot;Default type&quot;
+    
+    val fullName: String
+        get() = &quot;$name of type $type&quot;
+}
+
+class Fox: Animal()
+class Dog: Animal()
+
+fun main() {
+    val fox = Fox()
+    fox.name = &quot;Sox&quot;
+    fox.type = &quot;Tibetan sand fox&quot;
+
+    val dog = Dog()
+    dog.name = &quot;Billy&quot;
+    fox.type = &quot;Dog&quot;
+
+    print(fox.fullName) // Sox of type Tibetan sand fox
+    print(dog.fullName) // Billy of type Dog
+}
+</code></pre>
+<p>Abstract classes 具有默认体的函数和属性不仅可以是final的，而且它们默认是final的。我们可以用构造函数向这个抽象类传递值。</p>
+<pre><code class="language-kotlin">abstract class Animal(
+    var name: String = &quot;Default name&quot;,
+    var type: String = &quot;Default type&quot;
+) {
+    val fullName: String
+        get() = &quot;$name of type $type&quot;
+}
+
+class Fox(name: String): Animal(name, &quot;Fox&quot;)
+class Dog(name: String): Animal(name, &quot;Dog&quot;)
+
+fun main() {
+    val fox = Fox(&quot;Sox&quot;)
+    val dog = Dog(&quot;Billy&quot;)
+    print(fox.fullName) // Sox of type Fox
+    print(dog.fullName) // Billy of type Dog
+}
+</code></pre>
+<p>在拥有主constructor后，我们也可以使用init block</p>
+<pre><code class="language-kotlin">
+abstract class Animal(
+    var name: String = &quot;Default name&quot;,
+    var type: String = &quot;Default type&quot;
+) {
+    val fullName: String
+        get() = &quot;$name of type $type&quot;
+    
+    init {
+        print(&quot;Initializing $fullName&quot;)
+    }
+}
+
+class Fox(name: String): Animal(name, &quot;Fox&quot;)
+class Dog(name: String): Animal(name, &quot;Dog&quot;)
+
+fun main() {
+    val fox = Fox(&quot;Sox&quot;) // Initializing Sox of type Fox
+    val dog = Dog(&quot;Billy&quot;) // Initializing Billy of type Dog
+}
+</code></pre>
+<p>另一方面，我们可以实现多个的interfaces且extend 单一class，且需要调用superclass 的构造函数</p>
+<pre><code class="language-kotlin">abstract class A
+interface I1
+interface I2
+interface I3
+class C: A(), I1, I2, I3
+</code></pre>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://waltcow.github.io/post/kotlin-multiplatform-mvi-part-2-store/">
+                  <h3 class="post-title">
+                     Kotlin — Multiplatform MVI Part 2. Store
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>
