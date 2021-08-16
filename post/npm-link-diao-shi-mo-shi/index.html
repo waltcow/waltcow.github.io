@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" >
 
-<title>Kotlin 如何为class创建静态变量 | waltcow</title>
+<title>npm link 调试模式 | waltcow</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
@@ -33,11 +33,11 @@
 </script>
 
 
-    <meta name="description" content="大多数编程语言都有这样的概念：类可以有静态成员--每个类只创建一次的字段，并且可以在没有其包含的类的实例的情况下访问。
+    <meta name="description" content="记录一下调试 npm 本地包的情况
+介绍
 
-Kotlin没有类的静态成员，这意味着你不能在Kotlin类中创建静态方法和静态变量。
-幸运的是，Kotlin对象可以..." />
-    <meta name="keywords" content="笔记,kotlin" />
+在一个包文件夹内执行 npm link 将在全局文件 {prefix}/lib/node_modules/&lt;package&gt; 内，创建一个符号链接（symlink），这个链接指向 np..." />
+    <meta name="keywords" content="npm" />
   </head>
   <body>
     <div id="app" class="main">
@@ -112,34 +112,28 @@ Kotlin没有类的静态成员，这意味着你不能在Kotlin类中创建静�
       <div class="main-container">
         <div class="content-container" data-aos="fade-up">
           <div class="post-detail">
-            <h2 class="post-title">Kotlin 如何为class创建静态变量</h2>
-            <div class="post-date">2021-08-02</div>
+            <h2 class="post-title">npm link 调试模式</h2>
+            <div class="post-date">2021-08-16</div>
             
             <div class="post-content" v-pre>
-              <p>大多数编程语言都有这样的概念：类可以有静态成员--每个类只创建一次的字段，并且可以在没有其包含的类的实例的情况下访问。</p>
+              <p>记录一下调试 npm 本地包的情况</p>
+<h2 id="介绍">介绍</h2>
 <!-- more -->
-<p>Kotlin没有类的静态成员，这意味着你不能在Kotlin类中创建静态方法和静态变量。<br>
-幸运的是，Kotlin对象可以处理这个问题。如果你在你的类中声明了一个companion对象，你就可以用与Java/C#中调用静态方法相同的语法来调用其成员，只用类名作为限定符。</p>
-<pre><code class="language-kotlin">class MyClass { 
-  companion object {
-    val info = &quot;This is info&quot;    
-    fun getMoreInfo():String { return &quot;This is more fun&quot; }
-  } 
-}
-MyClass.info             // This is info
-MyClass.getMoreInfo()    // This is more fun
+<p>在一个包文件夹内执行 <code>npm link</code> 将在全局文件 <code>{prefix}/lib/node_modules/&lt;package&gt;</code> 内，创建一个符号链接（symlink），这个链接指向 <code>npm link</code>命令执行的地方。</p>
+<p>到其它目录下，执行 <code>npm link packageName</code> 命令，将会创建一个从全局安装的 <code>packageName</code>到当前文件内的 <code>node_modules</code> 下的符号链接。</p>
+<p>需要注意的的是， <code>packageName</code> 是取自包的 <code>package.json</code> 中 <code>name</code> 字段，不是文件夹名称。</p>
+<p>包的名称可能有作用域前缀，如果有， <code>packageName</code> 也要对应加上。</p>
+<h2 id="解除-link">解除 link</h2>
+<p>到项目下执行下面的命令：</p>
+<pre><code class="language-js">npm unlink --no-save package &amp;&amp; npm install
 </code></pre>
 
             </div>
             
               <div class="tag-container">
                 
-                  <a href="https://waltcow.github.io/tag/note/" class="tag">
-                    笔记
-                  </a>
-                
-                  <a href="https://waltcow.github.io/tag/JLYRMSPYa/" class="tag">
-                    kotlin
+                  <a href="https://waltcow.github.io/tag/ulEgJi0qC/" class="tag">
+                    npm
                   </a>
                 
               </div>
@@ -147,9 +141,9 @@ MyClass.getMoreInfo()    // This is more fun
             
               <div class="next-post">
                 <div class="next">下一篇</div>
-                <a href="https://waltcow.github.io/post/kotlin-coroutine-part-6-channels/">
+                <a href="https://waltcow.github.io/post/Abstract class vs interface in Kotlin/">
                   <h3 class="post-title">
-                    Kotlin Coroutine Part 6. Channels
+                    Kotlin下Abstract class 和 Interface 的区别是什么？
                   </h3>
                 </a>
               </div>

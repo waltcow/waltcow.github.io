@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://waltcow.github.io</id>
     <title>waltcow</title>
-    <updated>2021-08-10T01:53:04.426Z</updated>
+    <updated>2021-08-16T06:34:05.366Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://waltcow.github.io"/>
     <link rel="self" href="https://waltcow.github.io/atom.xml"/>
@@ -10,6 +10,28 @@
     <logo>https://waltcow.github.io/images/avatar.png</logo>
     <icon>https://waltcow.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, waltcow</rights>
+    <entry>
+        <title type="html"><![CDATA[npm link 调试模式]]></title>
+        <id>https://waltcow.github.io/post/npm-link-diao-shi-mo-shi/</id>
+        <link href="https://waltcow.github.io/post/npm-link-diao-shi-mo-shi/">
+        </link>
+        <updated>2021-08-16T06:30:55.000Z</updated>
+        <summary type="html"><![CDATA[<p>记录一下调试 npm 本地包的情况</p>
+<h2 id="介绍">介绍</h2>
+]]></summary>
+        <content type="html"><![CDATA[<p>记录一下调试 npm 本地包的情况</p>
+<h2 id="介绍">介绍</h2>
+<!-- more -->
+<p>在一个包文件夹内执行 <code>npm link</code> 将在全局文件 <code>{prefix}/lib/node_modules/&lt;package&gt;</code> 内，创建一个符号链接（symlink），这个链接指向 <code>npm link</code>命令执行的地方。</p>
+<p>到其它目录下，执行 <code>npm link packageName</code> 命令，将会创建一个从全局安装的 <code>packageName</code>到当前文件内的 <code>node_modules</code> 下的符号链接。</p>
+<p>需要注意的的是， <code>packageName</code> 是取自包的 <code>package.json</code> 中 <code>name</code> 字段，不是文件夹名称。</p>
+<p>包的名称可能有作用域前缀，如果有， <code>packageName</code> 也要对应加上。</p>
+<h2 id="解除-link">解除 link</h2>
+<p>到项目下执行下面的命令：</p>
+<pre><code class="language-js">npm unlink --no-save package &amp;&amp; npm install
+</code></pre>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Kotlin下Abstract class 和 Interface 的区别是什么？]]></title>
         <id>https://waltcow.github.io/post/Abstract class vs interface in Kotlin/</id>
@@ -2932,298 +2954,6 @@ suspend fun failedConcurrentSum(): Int = coroutineScope {
 First child was cancelled
 Computation failed with ArithmeticException
 </code></pre>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Kotlin Coroutine Part 2. Cancellation and timeouts]]></title>
-        <id>https://waltcow.github.io/post/kotlin-coroutine-part-2-cancellation-and-timeouts/</id>
-        <link href="https://waltcow.github.io/post/kotlin-coroutine-part-2-cancellation-and-timeouts/">
-        </link>
-        <updated>2021-07-27T08:32:32.000Z</updated>
-        <summary type="html"><![CDATA[<p>本文简单介绍一下 Kotlin Coroutine的取消和超时处理</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>本文简单介绍一下 Kotlin Coroutine的取消和超时处理</p>
-<!-- more -->
-<h1 id="kotlin-coroutine-part-2-cancellation-and-timeouts">Kotlin Coroutine Part 2. Cancellation and timeouts</h1>
-<p>在一个长时间运行的应用程序中，你可能需要对运行在后台的coroutines进行细粒度的控制。例如，用户可能已经关闭了一个正在运行着的coroutine页面，现在不再需要其结果了，可以取消其操作。<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html">launch</a>函数返回一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>，可以用来取消运行中的coroutine。</p>
-<pre><code class="language-kotlin">import kotlinx.coroutines.*
-
-fun main() = runBlocking {
-//sampleStart
-    val job = launch {
-        repeat(1000) { i -&gt;
-            println(&quot;job: I'm sleeping $i ...&quot;)
-            delay(500L)
-        }
-    }
-    delay(1300L) // delay a bit
-    println(&quot;main: I'm tired of waiting!&quot;)
-    job.cancel() // cancels the job
-    job.join() // waits for job's completion 
-    println(&quot;main: Now I can quit.&quot;)
-//sampleEnd    
-}
-</code></pre>
-<p>它的输出结果如下</p>
-<pre><code class="language-text">job: I'm sleeping 0 ...
-job: I'm sleeping 1 ...
-job: I'm sleeping 2 ...
-main: I'm tired of waiting!
-main: Now I can quit.
-</code></pre>
-<p>只要main调用<code>job.cancel</code>，我们就看不到另一个coroutine的任何输出，因为它被取消了。还有一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>的扩展函数<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/cancel-and-join.html">cancelAndJoin</a>，结合了<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/cancel.html">cancel</a>和<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html">join</a>的调用。</p>
-<h2 id="取消是相互协同的">取消是相互协同的</h2>
-<p>Coroutine的取消是<em>相互协同的</em>。Coroutine代码必须在相互协同下才能被取消。<code>kotlinx.coroutines</code>中所有的suspend函数都是<em>可取消的</em>。它们会检查Coroutine程序的取消，并在取消时抛出<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html">CancellationException</a>。然而，如果一个Coroutine在计算工作中，并且没有检查取消，那么它就不能被取消，就像下面的例子所示。</p>
-<pre><code class="language-kotlin">import kotlinx.coroutines.*
-
-fun main() = runBlocking {
-//sampleStart
-    val startTime = System.currentTimeMillis()
-    val job = launch(Dispatchers.Default) {
-        var nextPrintTime = startTime
-        var i = 0
-        while (i &lt; 5) { // computation loop, just wastes CPU
-            // print a message twice a second
-            if (System.currentTimeMillis() &gt;= nextPrintTime) {
-                println(&quot;job: I'm sleeping ${i++} ...&quot;)
-                nextPrintTime += 500L
-            }
-        }
-    }
-    delay(1300L) // delay a bit
-    println(&quot;main: I'm tired of waiting!&quot;)
-    job.cancelAndJoin() // cancels the job and waits for its completion
-    println(&quot;main: Now I can quit.&quot;)
-//sampleEnd    
-}
-
-</code></pre>
-<p>运行结果如下：</p>
-<pre><code>job: I'm sleeping 0 ...
-job: I'm sleeping 1 ...
-job: I'm sleeping 2 ...
-main: I'm tired of waiting!
-job: I'm sleeping 3 ...
-job: I'm sleeping 4 ...
-main: Now I can quit.
-
-</code></pre>
-<p>运行上面程序可以看到，即使在job被取消后，仍然继续打印 &quot;I'm sleeping&quot;，直到 job在反复执行5次后才完成。</p>
-<h2 id="让正在运行中代码可以取消">让正在运行中代码可以取消</h2>
-<p>有两种方法可以取消正在运行代码。第一种是周期性地调用一个检查取消的suspend函数。譬如使用 <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/yield.html">yield</a>函数是个选择。另一种是显式地检查取消的状态。让我们试试后一种方法。</p>
-<p>用<code>while (isActive)</code>替换前面例子中的<code>while (i &lt; 5)</code>，然后重新运行它。</p>
-<pre><code class="language-kotlin">import kotlinx.coroutines.*
-
-fun main() = runBlocking {
-//sampleStart
-    val startTime = System.currentTimeMillis()
-    val job = launch(Dispatchers.Default) {
-        var nextPrintTime = startTime
-        var i = 0
-        while (isActive) { // cancellable computation loop
-            // print a message twice a second
-            if (System.currentTimeMillis() &gt;= nextPrintTime) {
-                println(&quot;job: I'm sleeping ${i++} ...&quot;)
-                nextPrintTime += 500L
-            }
-        }
-    }
-    delay(1300L) // delay a bit
-    println(&quot;main: I'm tired of waiting!&quot;)
-    job.cancelAndJoin() // cancels the job and waits for its completion
-    println(&quot;main: Now I can quit.&quot;)
-//sampleEnd    
-}
-</code></pre>
-<p>运行结果：</p>
-<pre><code>job: I'm sleeping 0 ...
-job: I'm sleeping 1 ...
-job: I'm sleeping 2 ...
-main: I'm tired of waiting!
-main: Now I can quit.
-</code></pre>
-<p>正如你所看到的，现在这个循环被取消了。<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/is-active.html">isActive</a>是通过<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html">CoroutineScope</a>对象在coroutine内部可用的一个扩展属性。</p>
-<h2 id="用-finally关闭占用资源">用 <code>finally</code>关闭占用资源</h2>
-<p>可取消的暂停函数在取消时抛出<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html">CancellationException</a>，可以用常规方式处理。例如，<code>try {...} finally {...}</code>表达式和使用Kotlin的<code>use</code>函数，在一个coroutine被取消时正常执行它们的最终处理动作。</p>
-<pre><code class="language-kotlin">import kotlinx.coroutines.*
-
-fun main() = runBlocking {
-//sampleStart
-    val job = launch {
-        try {
-            repeat(1000) { i -&gt;
-                println(&quot;job: I'm sleeping $i ...&quot;)
-                delay(500L)
-            }
-        } finally {
-            println(&quot;job: I'm running finally&quot;)
-        }
-    }
-    delay(1300L) // delay a bit
-    println(&quot;main: I'm tired of waiting!&quot;)
-    job.cancelAndJoin() // cancels the job and waits for its completion
-    println(&quot;main: Now I can quit.&quot;)
-//sampleEnd    
-}
-
-</code></pre>
-<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html">join</a>和<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/cancel-and-join.html">cancelAndJoin</a>都会等待所有的终结动作完成，所以上面的例子会产生以下输出</p>
-<pre><code class="language-text">job: I'm sleeping 0 ...
-job: I'm sleeping 1 ...
-job: I'm sleeping 2 ...
-main: I'm tired of waiting!
-job: I'm running finally
-main: Now I can quit.
-</code></pre>
-<h2 id="运行不可取消的程序块">运行不可取消的程序块</h2>
-<p>在前面例子中，当运行代码的coroutine被取消的情况下， 任何试图在 <code>finally</code>块中使用suspend函数的行为都会导致<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html">CancellationException</a>。通常情况下这并不影响，因为所有处理得当的关闭操作（关闭File读写、取消Job或关闭任何类型的channel）通常都是无阻塞的，不涉及任何suspend函数。然而，在极少数情况下，当你需要在一个已取消的程序中暂停时，你可以使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html">withContext</a>函数和<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-non-cancellable/index.html">NonCancellable</a> 的context 将相应的代码包裹在<code>withContext(NonCancellable) {...}</code>中，正如下面的例子所示。</p>
-<pre><code class="language-kotlin">import kotlinx.coroutines.*
-
-fun main() = runBlocking {
-//sampleStart
-    val job = launch {
-        try {
-            repeat(1000) { i -&gt;
-                println(&quot;job: I'm sleeping $i ...&quot;)
-                delay(500L)
-            }
-        } finally {
-            withContext(NonCancellable) {
-                println(&quot;job: I'm running finally&quot;)
-                delay(1000L)
-                println(&quot;job: And I've just delayed for 1 sec because I'm non-cancellable&quot;)
-            }
-        }
-    }
-    delay(1300L) // delay a bit
-    println(&quot;main: I'm tired of waiting!&quot;)
-    job.cancelAndJoin() // cancels the job and waits for its completion
-    println(&quot;main: Now I can quit.&quot;)
-//sampleEnd    
-}
-</code></pre>
-<p>代码运行结果</p>
-<pre><code>job: I'm sleeping 0 ...
-job: I'm sleeping 1 ...
-job: I'm sleeping 2 ...
-main: I'm tired of waiting!
-job: I'm running finally
-job: And I've just delayed for 1 sec because I'm non-cancellable
-main: Now I can quit.
-
-</code></pre>
-<h2 id="超时处理">超时处理</h2>
-<p>取消一个执行中的coroutine，最常见原因是因为它的执行时间已经超时了。虽然你可以手动拿到相应的<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html">Job</a>的引用，并在延迟一会儿后再启动一个单独的coroutine来取消那个job，但这里推荐用一个<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>函数处理。请看下面的例子。</p>
-<pre><code class="language-kotlin">import kotlinx.coroutines.*
-
-fun main() = runBlocking {
-//sampleStart
-    withTimeout(1300L) {
-        repeat(1000) { i -&gt;
-            println(&quot;I'm sleeping $i ...&quot;)
-            delay(500L)
-        }
-    }
-//sampleEnd
-}
-</code></pre>
-<p>输出结果如下:</p>
-<pre><code class="language-text">I'm sleeping 0 ...
-I'm sleeping 1 ...
-I'm sleeping 2 ...
-Exception in thread &quot;main&quot; kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 1300 ms
-</code></pre>
-<p>由<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>抛出的<code>TimeoutCancellationException</code>是<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html">CancellationException</a>的一个子类。我们以前没有在控制台看到它的堆栈信息。这是因为在一个被取消的循环程序里面，<code>CancellationException</code>被认为是循环程序结束的一个合理原因。然而，在这个例子中，我们在<code>main</code>函数中使用了`withTimeout'。</p>
-<p>由于取消只是一个异常，所有的资源都以正常的方式关闭。如果你需要在任何一种超时情况下专门做一些额外的动作，你可以用<code>try {...} catch (e: TimeoutCancellationException) {...}</code>块来包装处理超时的代码，或者使用<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout-or-null.html">withTimeoutOrNull</a>函数，它与<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>类似，但不同是它会在超时后会返回<code>null</code>而不是抛出一个异常。</p>
-<pre><code class="language-kotlin">import kotlinx.coroutines.*
-
-fun main() = runBlocking {
-//sampleStart
-    val result = withTimeoutOrNull(1300L) {
-        repeat(1000) { i -&gt;
-            println(&quot;I'm sleeping $i ...&quot;)
-            delay(500L)
-        }
-        &quot;Done&quot; // will get cancelled before it produces this result
-    }
-    println(&quot;Result is $result&quot;)
-//sampleEnd
-}
-</code></pre>
-<p>输出结果如下:</p>
-<pre><code class="language-text">I'm sleeping 0 ...
-I'm sleeping 1 ...
-I'm sleeping 2 ...
-Result is null
-</code></pre>
-<h2 id="异步操作的超时处理和资源管理">异步操作的超时处理和资源管理</h2>
-<p><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html">withTimeout</a>中的超时事件对于在其块中运行的代码来说是异步的，可能在任何时候发生，甚至在从超时代码块内部返回之前。如果你在区块内打开或获取一些需要在区块外关闭或释放的资源，请牢记这一点。</p>
-<p>例如，这里我们用<code>Resource</code>类来模仿一个可关闭的资源，它只通过增加<code>acquired</code>计数器和从<code>close</code>函数中减去这个计数器来跟踪它被创建的次数。让我们用很小的超时来运行大量的循环程序，尝试在延迟一段时间后从<code>withTimeout</code>块内部获取这个资源，并从外部释放它。</p>
-<pre><code class="language-kotlin">import kotlinx.coroutines.*
-
-//sampleStart
-var acquired = 0
-
-class Resource {
-    init { acquired++ } // Acquire the resource
-    fun close() { acquired-- } // Release the resource
-}
-
-fun main() {
-    runBlocking {
-        repeat(100_000) { // Launch 100K coroutines
-            launch { 
-                val resource = withTimeout(60) { // Timeout of 60 ms
-                    delay(50) // Delay for 50 ms
-                    Resource() // Acquire a resource and return it from withTimeout block     
-                }
-                resource.close() // Release the resource
-            }
-        }
-    }
-    // Outside of runBlocking all coroutines have completed
-    println(acquired) // Print the number of resources still acquired
-}
-//sampleEnd
-</code></pre>
-<p>如果你运行上面的代码，你会发现它并不总是打印0，尽管这可能取决于你的机器的时间，你可能需要在这个例子中调整超时时间，以真正看到非0值。</p>
-<blockquote>
-<p>注意，在这里从100K Coroutine中增加和减少<code>acquired</code>计数器是完全安全的，因为它总是发生在同一个主线程中。关于这一点，我们将在下一章的coroutine上下文中作进一步解释。</p>
-</blockquote>
-<p>为了解决这个问题，你可以在变量中存储对资源的引用，而不是从<code>withTimeout</code> 块中返回它</p>
-<pre><code class="language-kotlin">import kotlinx.coroutines.*
-
-var acquired = 0
-
-class Resource {
-    init { acquired++ } // Acquire the resource
-    fun close() { acquired-- } // Release the resource
-}
-
-fun main() {
-//sampleStart
-    runBlocking {
-        repeat(100_000) { // Launch 100K coroutines
-            launch { 
-                var resource: Resource? = null // Not acquired yet
-                try {
-                    withTimeout(60) { // Timeout of 60 ms
-                        delay(50) // Delay for 50 ms
-                        resource = Resource() // Store a resource to the variable if acquired      
-                    }
-                    // We can do something else with the resource here
-                } finally {  
-                    resource?.close() // Release the resource if it was acquired
-                }
-            }
-        }
-    }
-    // Outside of runBlocking all coroutines have completed
-    println(acquired) // Print the number of resources still acquired
-//sampleEnd
-}
-</code></pre>
-<p>这个例子总是打印出零。资源不会泄漏。</p>
 ]]></content>
     </entry>
 </feed>
